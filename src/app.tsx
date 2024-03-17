@@ -1,9 +1,9 @@
-import { Button, ChakraProvider, Heading } from "@chakra-ui/react";
-import { ElectronHandler, IpcRenderHandler } from "./preload";
+import { Button, ChakraProvider, Heading, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { useState } from "react";
+import { ExecutionTab } from "src/components/ExecutionTab";
+import { FilesTab } from "src/components/FilesTab";
+import { ParametersTab } from "src/components/ParametersTab";
 import { theme } from "src/lib/theme";
-
-declare const electron: ElectronHandler;
-declare const ipcRender: IpcRenderHandler;
 
 ipcRender.receive("main-to-render", (result: string) => {
   console.log(result); // Ping 1 (send from main process)
@@ -12,43 +12,29 @@ ipcRender.receive("main-to-render", (result: string) => {
 });
 
 export default function App() {
+  const [tabIndex, setTabIndex] = useState(0);
+
   return (
     <ChakraProvider theme={theme}>
-      {/* <Heading>HipSTR UI</Heading> */}
-      <Heading as="h2" size="md">
-        Input files
-      </Heading>
-      <Button
-        onClick={() => {
-          const dialogConfig = {
-            title: "Select a file",
-            buttonLabel: "This one will do",
-            properties: ["openFile", "multiSelections", "openDirectory"],
-          };
-          electron.openDialog("showOpenDialog", dialogConfig).then((result) => console.log(result));
-        }}
-      >
-        Select files
-      </Button>
-      <Button
-        onClick={async () => {
-          // ipcRender.invoke("render-to-main-to-render", "Ping 2 (invoke from render process)").then((result) => {
-          //   console.log(result);
-          // }); // Pong 2 (handle from main process)
-          const result = await ipcRender.invoke("execute", "ping -c 4 8.8.8.8");
-          console.log(result);
-        }}
-      >
-        Execute command
-      </Button>
+      <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)}>
+        <TabList>
+          <Tab>Files</Tab>
+          <Tab>Parameters</Tab>
+          <Tab>Execution</Tab>
+        </TabList>
 
-      <Heading as="h2" size="md">
-        Parameters
-      </Heading>
-
-      <Heading as="h2" size="md">
-        Command
-      </Heading>
+        <TabPanels>
+          <TabPanel>
+            <FilesTab onFinish={() => setTabIndex(1)} />
+          </TabPanel>
+          <TabPanel>
+            <ParametersTab onFinish={() => setTabIndex(2)} />
+          </TabPanel>
+          <TabPanel>
+            <ExecutionTab />
+          </TabPanel>
+        </TabPanels>
+      </Tabs>
     </ChakraProvider>
   );
 }

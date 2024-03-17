@@ -1,6 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent } from "electron";
 import path from "path";
 import child_process from "child_process";
+import fs from "node:fs";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -57,10 +58,30 @@ app.on("activate", () => {
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
 
-ipcMain.handle("dialog", (event: IpcMainInvokeEvent, method: any, params: any[]) => {
+ipcMain.handle("dialog", async (event: IpcMainInvokeEvent, method: any, params: any[]) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  dialog[method](params);
+  const result = await dialog[method](params);
+  return result;
+});
+
+ipcMain.handle("isFolder", async (event: IpcMainInvokeEvent, path: string) => {
+  return fs.existsSync(path) && fs.lstatSync(path).isDirectory();
+});
+
+ipcMain.handle("getPathSep", async (_: IpcMainInvokeEvent) => {
+  return path.sep;
+});
+
+ipcMain.handle("getFilesFromFolder", async (event: IpcMainInvokeEvent, path: string) => {
+  return new Promise((resolve, reject) =>
+    fs.readdir(path, (err, files) => {
+      if (err) {
+        reject(err);
+      }
+      resolve(files);
+    })
+  );
 });
 
 ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => {
@@ -77,6 +98,12 @@ ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => 
   proc.on("close", (code) => {
     mainWindow.webContents.send("main-to-render", code);
   });
+});
+
+ipcMain.handle("path", (event: IpcMainInvokeEvent, method: string, param: any) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return path[method](param);
 });
 
 ipcMain.on("render-to-main", (event, message) => {

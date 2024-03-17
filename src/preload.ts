@@ -3,12 +3,16 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const electronHandler = {
-  openDialog: (method: any, config: object) => ipcRenderer.invoke("dialog", method, config),
+  dialog: (method: any, config: object) => ipcRenderer.invoke("dialog", method, config),
+  isFolder: (path: string) => ipcRenderer.invoke("isFolder", path),
+  getFilesFromFolder: (path: string) => ipcRenderer.invoke("getFilesFromFolder", path),
+  path: (method: string, param: string) => ipcRenderer.invoke("path", method, param),
+  getPathSep: () => ipcRenderer.invoke("getPathSep"),
 };
 
 contextBridge.exposeInMainWorld("electron", electronHandler);
 
-export type ElectronHandler = typeof electronHandler;
+export type DialogHandler = typeof electronHandler;
 
 // White-listed channels.
 const ipc = {
