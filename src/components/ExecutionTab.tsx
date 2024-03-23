@@ -24,16 +24,16 @@ export const ExecutionTab: FC = () => {
 
   const formattedParams = params
     .map(([name, value]) => {
-      const separator = `\n${spaces}${spaces}`;
+      const separator = `\\\n${spaces}${spaces}`;
       let valueStr = "";
       if (value) {
-        valueStr = Array.isArray(value) ? ` ${separator}` + value.join(`,${separator}`) + "\n" : ` ${value}`;
+        valueStr = Array.isArray(value) ? ` ${separator}` + value.join(`, ${separator}`) + "\n" : ` ${value}`;
       }
-      return `\n${spaces}--${name}${valueStr}`;
+      return ` \\\n${spaces}--${name}${valueStr}`;
     })
     .join("");
 
-  const cmdStr = `HipSTR ${formattedParams}`;
+  const cmdStr = `HipSTR${formattedParams}`;
 
   const validParameters = !!fasta && !!bed && !!output;
   return (
