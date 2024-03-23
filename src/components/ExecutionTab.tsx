@@ -3,6 +3,8 @@ import { useAtom, useAtomValue } from "jotai";
 import { FC } from "react";
 import { bedAtom, fastaAtom, filesAtom, outputAtom } from "src/jotai/execute";
 
+const spaces = "  ";
+
 export const ExecutionTab: FC = () => {
   const toast = useToast();
   const [fasta] = useAtom(fastaAtom);
@@ -10,7 +12,28 @@ export const ExecutionTab: FC = () => {
   const [output] = useAtom(outputAtom);
   const files = useAtomValue(filesAtom);
 
-  const filesStr = (files ?? []).join(",");
+  const params = [
+    ["fasta", fasta],
+    ["bed", bed],
+    ["str-vcf", output],
+    ["min-reads", 8],
+    ["def-stutter-model"],
+    ["max-str-len", 127],
+    ["bams", files],
+  ];
+
+  const formattedParams = params
+    .map(([name, value]) => {
+      const separator = `\n${spaces}${spaces}`;
+      let valueStr = "";
+      if (value) {
+        valueStr = Array.isArray(value) ? ` ${separator}` + value.join(`,${separator}`) + "\n" : ` ${value}`;
+      }
+      return `\n${spaces}--${name}${valueStr}`;
+    })
+    .join("");
+
+  const cmdStr = `HipSTR ${formattedParams}`;
 
   const validParameters = !!fasta && !!bed && !!output;
   return (
@@ -20,10 +43,7 @@ export const ExecutionTab: FC = () => {
       </Heading>
 
       <Box maxW="100%" overflow="auto">
-        <Code>
-          HipSTR --bams {filesStr} --fasta {fasta} --regions {bed} --str-vcf {output} --min-reads 8 --def-stutter-model
-          --max-str-len 127
-        </Code>
+        <Code whiteSpace="pre-wrap">{cmdStr}</Code>
       </Box>
 
       <Divider mt="4" />
