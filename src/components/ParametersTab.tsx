@@ -31,7 +31,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         label="Reference genome fasta"
         value={fasta}
         onChange={(path) => {
-          if (!/\.fasta$/i.test(path)) {
+          if (!/\.fasta|\.fa$/i.test(path)) {
             toast({
               title: "File doesn't have fasta extension",
               status: "error",

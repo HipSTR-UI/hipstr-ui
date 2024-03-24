@@ -1,20 +1,50 @@
-import { Heading, Button, VStack, useToast, Divider, Code, Box } from "@chakra-ui/react";
+import { Heading, Button, VStack, useToast, Divider, Code } from "@chakra-ui/react";
 import { useAtom, useAtomValue } from "jotai";
-import { FC } from "react";
+import { FC, useEffect, useRef, useState } from "react";
 import { bedAtom, fastaAtom, filesAtom, outputAtom } from "src/jotai/execute";
 
 const spaces = "  ";
 
+function parseJSON(value: string) {
+  try {
+    return JSON.parse(value);
+  } catch (ex) {
+    return null;
+  }
+}
+
 export const ExecutionTab: FC = () => {
   const toast = useToast();
+  const [executing, setExecuting] = useState(false);
+  const [cmdOut, setCmdOut] = useState("");
   const [fasta] = useAtom(fastaAtom);
   const [bed] = useAtom(bedAtom);
   const [output] = useAtom(outputAtom);
   const files = useAtomValue(filesAtom);
+  const outRef = useRef(null);
+
+  useEffect(() => {
+    ipcRender.receive("main-to-render", (result: string) => {
+      const json = parseJSON(result);
+      if (!json) {
+        setCmdOut((prev) => `${prev}\n${result}`);
+        setTimeout(() => {
+          outRef.current.scrollTo({ top: outRef.current.scrollHeight, left: 0 }); //, behavior: "smooth"
+        }, 1);
+      } else {
+        if (json.exitCode && json.exitCode !== 0) {
+          toast({
+            title: "Command execution failed",
+            status: "error",
+          });
+        }
+      }
+    });
+  }, []);
 
   const params = [
     ["fasta", fasta],
-    ["bed", bed],
+    ["regions", bed],
     ["str-vcf", output],
     ["min-reads", 8],
     ["def-stutter-model"],
@@ -27,13 +57,13 @@ export const ExecutionTab: FC = () => {
       const separator = `\\\n${spaces}${spaces}`;
       let valueStr = "";
       if (value) {
-        valueStr = Array.isArray(value) ? ` ${separator}` + value.join(`, ${separator}`) + "\n" : ` ${value}`;
+        valueStr = Array.isArray(value) ? ` ${separator}` + value.join(`,`) + "\n" : ` ${value}`;
       }
       return ` \\\n${spaces}--${name}${valueStr}`;
     })
     .join("");
 
-  const cmdStr = `HipSTR${formattedParams}`;
+  const cmdStr = `/Users/jesus/Proyectos/HipSTR/HipSTR${formattedParams}`;
 
   const validParameters = !!fasta && !!bed && !!output;
   return (
@@ -42,16 +72,28 @@ export const ExecutionTab: FC = () => {
         Command to execute
       </Heading>
 
-      <Box maxW="100%" overflow="auto">
-        <Code whiteSpace="pre-wrap">{cmdStr}</Code>
-      </Box>
+      <Code
+        ref={outRef}
+        display="flex"
+        whiteSpace="pre-wrap"
+        flexGrow={1}
+        w="100%"
+        overflowY="auto"
+        overflowX="hidden"
+        h="575px"
+      >
+        {cmdStr}
+        {executing ? cmdOut : ""}
+      </Code>
 
       <Divider mt="4" />
       <Button
         size="sm"
         isDisabled={!validParameters}
         onClick={async () => {
-          //
+          await ipcRender.invoke("execute", cmdStr);
+          setCmdOut("");
+          setExecuting(true);
         }}
       >
         Execute
@@ -59,17 +101,3 @@ export const ExecutionTab: FC = () => {
     </VStack>
   );
 };
-
-{
-  /* <Button
-          onClick={async () => {
-            // ipcRender.invoke("render-to-main-to-render", "Ping 2 (invoke from render process)").then((result) => {
-            //   console.log(result);
-            // }); // Pong 2 (handle from main process)
-            const result = await ipcRender.invoke("execute", "ping -c 4 8.8.8.8");
-            console.log(result);
-          }}
-        >
-          Execute command
-        </Button> */
-}

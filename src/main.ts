@@ -14,7 +14,7 @@ const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
-    height: 600,
+    height: 800,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -96,7 +96,7 @@ ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => 
     mainWindow.webContents.send("main-to-render", data.toString());
   });
   proc.on("close", (code) => {
-    mainWindow.webContents.send("main-to-render", code);
+    mainWindow.webContents.send("main-to-render", { exitCode: code });
   });
 });
 
