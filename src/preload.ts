@@ -3,11 +3,14 @@
 import { contextBridge, ipcRenderer } from "electron";
 
 const electronHandler = {
-  dialog: (method: any, config: object) => ipcRenderer.invoke("dialog", method, config),
+  dialog: (method: string, config: object) => ipcRenderer.invoke("dialog", method, config),
   isFolder: (path: string) => ipcRenderer.invoke("isFolder", path),
   getFilesFromFolder: (path: string) => ipcRenderer.invoke("getFilesFromFolder", path),
   path: (method: string, param: string) => ipcRenderer.invoke("path", method, param),
+  os: (method: string, param: string) => ipcRenderer.invoke("os", method, param),
+  process: (method: string, param: string) => ipcRenderer.invoke("process", method, param),
   getPathSep: () => ipcRenderer.invoke("getPathSep"),
+  dirName: () => ipcRenderer.invoke("dirName"),
 };
 
 contextBridge.exposeInMainWorld("electron", electronHandler);

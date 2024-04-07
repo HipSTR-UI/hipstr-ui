@@ -1,5 +1,7 @@
 import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent } from "electron";
 import path from "path";
+import os from "os";
+import process from "process";
 import child_process from "child_process";
 import fs from "node:fs";
 
@@ -100,10 +102,29 @@ ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => 
   });
 });
 
+ipcMain.handle("dirName", (event: IpcMainInvokeEvent) => {
+  return __dirname;
+});
+
 ipcMain.handle("path", (event: IpcMainInvokeEvent, method: string, param: any) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return path[method](param);
+});
+
+ipcMain.handle("os", (event: IpcMainInvokeEvent, method: string, param: any) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return os[method](param);
+});
+
+ipcMain.handle("process", (event: IpcMainInvokeEvent, attribute: string) => {
+  if (attribute === "resourcesPath" && __filename.indexOf("app.asar") === -1) {
+    return ".";
+  }
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return process[attribute];
 });
 
 ipcMain.on("render-to-main", (event, message) => {
