@@ -6,11 +6,13 @@ const electronHandler = {
   dialog: (method: string, config: object) => ipcRenderer.invoke("dialog", method, config),
   isFolder: (path: string) => ipcRenderer.invoke("isFolder", path),
   getFilesFromFolder: (path: string) => ipcRenderer.invoke("getFilesFromFolder", path),
+  fs: (method: string, param: string) => ipcRenderer.invoke("fs", method, param),
   path: (method: string, param: string) => ipcRenderer.invoke("path", method, param),
   os: (method: string, param: string) => ipcRenderer.invoke("os", method, param),
   process: (method: string, param: string) => ipcRenderer.invoke("process", method, param),
   getPathSep: () => ipcRenderer.invoke("getPathSep"),
   dirName: () => ipcRenderer.invoke("dirName"),
+  execSync: (command: string) => ipcRenderer.invoke("execSync", command),
 };
 
 contextBridge.exposeInMainWorld("electron", electronHandler);

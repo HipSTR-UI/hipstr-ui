@@ -1,9 +1,10 @@
-import { Heading, Button, VStack, useToast, Text, Divider } from "@chakra-ui/react";
+import { Heading, Button, VStack, useToast, Text, Divider, Input, Checkbox } from "@chakra-ui/react";
 import { OpenDialogReturnValue } from "electron";
 import { useAtom } from "jotai";
 import { FC, useEffect } from "react";
+import { parameters } from "src/constants/parameters";
 import { usePathSeparator } from "src/hooks/usePathSeparator";
-import { bedAtom, fastaAtom, outputAtom } from "src/jotai/execute";
+import { bedAtom, fastaAtom, outputAtom, paramsAtom } from "src/jotai/execute";
 
 const OUTPUT_FILE_NAME = "str_calls.vcf.gz";
 
@@ -12,6 +13,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [fasta, setFasta] = useAtom(fastaAtom);
   const [bed, setBed] = useAtom(bedAtom);
   const [output, setOutput] = useAtom(outputAtom);
+  const [params, setParams] = useAtom(paramsAtom);
   const pathSep = usePathSeparator();
 
   useEffect(() => {
@@ -26,7 +28,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
   const validParameters = !!fasta && !!bed && !!output;
   return (
-    <VStack gap="2" alignItems="flex-start">
+    <VStack gap="6" alignItems="flex-start">
       <FileParameter
         label="Reference genome fasta"
         value={fasta}
@@ -66,6 +68,60 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         }}
       />
 
+      <Heading as="h3" size="sm">
+        Additional parameters
+      </Heading>
+
+      {parameters.map((param) => (
+        <VStack key={param.name} gap="2" alignItems="flex-start">
+          {param.type === "boolean" ? (
+            <Checkbox
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setParams({
+                    [param.name]: true,
+                  });
+                } else if (params[param.name]) {
+                  const newParams = Object.fromEntries(Object.entries(params).filter(([key]) => key !== param.name));
+                  setParams(newParams);
+                }
+              }}
+            >
+              <Text as="span" fontSize="sm" fontWeight="600">
+                {param.name}:
+              </Text>{" "}
+              <Text as="span" fontSize="sm" fontWeight="400">
+                {param.description}
+              </Text>
+            </Checkbox>
+          ) : (
+            <>
+              <Heading as="h4" size="xs">
+                {param.name}:{" "}
+                <Text as="span" fontSize="sm" fontWeight="400">
+                  {param.description}
+                </Text>
+              </Heading>
+              <Input
+                type={param.type}
+                placeholder="Value"
+                size="sm"
+                onChange={(e) => {
+                  if (e.target.value.trim()) {
+                    setParams({
+                      [param.name]: e.target.value,
+                    });
+                  } else if (params[param.name]) {
+                    const newParams = Object.fromEntries(Object.entries(params).filter(([key]) => key !== param.name));
+                    setParams(newParams);
+                  }
+                }}
+              />
+            </>
+          )}
+        </VStack>
+      ))}
+
       <Divider mt="4" />
       <Button
         size="sm"
@@ -89,7 +145,7 @@ type FileParameterProps = {
 
 const FileParameter: FC<FileParameterProps> = ({ label, value, onChange, properties = ["openFile"] }) => {
   return (
-    <>
+    <VStack gap="1" alignItems="flex-start">
       <Heading as="h3" size="sm">
         {label}
       </Heading>
@@ -112,6 +168,6 @@ const FileParameter: FC<FileParameterProps> = ({ label, value, onChange, propert
         Select
       </Button>
       {value && <Text fontSize="md">{value}</Text>}
-    </>
+    </VStack>
   );
 };

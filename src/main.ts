@@ -102,8 +102,18 @@ ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => 
   });
 });
 
+ipcMain.handle("execSync", (event: IpcMainInvokeEvent, command: string) => {
+  return child_process.execSync(command).toString();
+});
+
 ipcMain.handle("dirName", (event: IpcMainInvokeEvent) => {
   return __dirname;
+});
+
+ipcMain.handle("fs", (event: IpcMainInvokeEvent, method: string, param: any) => {
+  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+  // @ts-ignore
+  return fs[method](param);
 });
 
 ipcMain.handle("path", (event: IpcMainInvokeEvent, method: string, param: any) => {
