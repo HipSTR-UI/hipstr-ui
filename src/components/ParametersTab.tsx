@@ -76,6 +76,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         <VStack key={param.name} gap="2" alignItems="flex-start">
           {param.type === "boolean" ? (
             <Checkbox
+              isChecked={params[param.name]}
               onChange={(e) => {
                 if (e.target.checked) {
                   setParams({
@@ -107,6 +108,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
                 type={param.type}
                 placeholder="Value"
                 size="sm"
+                value={params[param.name]}
                 onChange={(e) => {
                   if (e.target.value.trim()) {
                     setParams({

@@ -30,7 +30,6 @@ export const ExecutionTab: FC = () => {
   const outRef = useRef(null);
   const os = useAtomValue(osAtom);
   const params = useAtomValue(paramsAtom);
-  const samtoolsPath = `${os.resourcesPath}/samtools/${os.platform}-${os.arch}/samtools`;
 
   useEffect(() => {
     ipcRender.receive("main-to-render", (result: string | { exitCode: number }) => {
@@ -115,7 +114,7 @@ export const ExecutionTab: FC = () => {
           // Check fasta index
           if (!(await hasIndexFile(fasta))) {
             setIndexesOut((prev) => `${prev}\nFasta index not found, creating..`);
-            if (!(await createIndexFile(samtoolsPath, fasta))) {
+            if (!(await createIndexFile("samtools", fasta))) {
               setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
             }
           }
@@ -123,7 +122,7 @@ export const ExecutionTab: FC = () => {
           for (const file of files) {
             if (!(await hasIndexFile(file))) {
               setIndexesOut((prev) => `${prev}\n${file} index not found, creating..`);
-              if (!(await createIndexFile(samtoolsPath, file))) {
+              if (!(await createIndexFile("samtools", file))) {
                 setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
               }
             }
@@ -141,7 +140,8 @@ export const ExecutionTab: FC = () => {
 
 async function createIndexFile(samtoolsPath: string, path: string) {
   try {
-    return await electron.execSync(`${samtoolsPath} index ${path}`);
+    await electron.execSync(`${samtoolsPath} index ${path}`);
+    return true;
   } catch (ex) {
     alert(`${ex}`);
     console.error(ex);
