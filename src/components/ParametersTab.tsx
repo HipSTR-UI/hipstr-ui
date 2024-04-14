@@ -79,6 +79,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
               onChange={(e) => {
                 if (e.target.checked) {
                   setParams({
+                    ...params,
                     [param.name]: true,
                   });
                 } else if (params[param.name]) {
@@ -109,6 +110,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
                 onChange={(e) => {
                   if (e.target.value.trim()) {
                     setParams({
+                      ...params,
                       [param.name]: e.target.value,
                     });
                   } else if (params[param.name]) {
