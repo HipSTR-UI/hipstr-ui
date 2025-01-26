@@ -87,17 +87,24 @@ ipcMain.handle("getFilesFromFolder", async (event: IpcMainInvokeEvent, path: str
 });
 
 ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => {
+  let handle: number | undefined;
+  if (command.startsWith("./hipstr")) {
+    handle = fs.openSync("log.txt", "w");
+  }
   const proc = child_process.spawn(command, [], {
     shell: true,
     stdio: ["ignore", "pipe", "pipe"],
   });
   proc.stdout.on("data", (data) => {
+    handle && fs.appendFileSync(handle, data.toString());
     mainWindow.webContents.send("main-to-render", data.toString());
   });
   proc.stderr.on("data", (data) => {
+    handle && fs.appendFileSync(handle, data.toString());
     mainWindow.webContents.send("main-to-render", data.toString());
   });
   proc.on("close", (code) => {
+    handle && fs.closeSync(handle);
     mainWindow.webContents.send("main-to-render", { exitCode: code });
   });
 });
@@ -110,10 +117,10 @@ ipcMain.handle("dirName", (event: IpcMainInvokeEvent) => {
   return __dirname;
 });
 
-ipcMain.handle("fs", (event: IpcMainInvokeEvent, method: string, param: any) => {
+ipcMain.handle("fs", async (event: IpcMainInvokeEvent, method: string, params: any[]) => {
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
-  return fs[method](param);
+  return fs[method](...params);
 });
 
 ipcMain.handle("path", (event: IpcMainInvokeEvent, method: string, param: any) => {

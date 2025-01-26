@@ -16,11 +16,11 @@ export const parameters = [
       "Output a file of each locus' alignments for visualization with VizAln or VizAlnPdf. Why? You want to visualize or inspect the STR genotypes",
     type: "text",
   },
-  {
-    name: "log",
-    description: "Output the log information to the provided file (Default = Standard error)",
-    type: "text",
-  },
+  // {
+  //   name: "log",
+  //   description: "Output the log information to the provided file (Default = Standard error)",
+  //   type: "text",
+  // },
   {
     name: "haploid-chrs",
     description:

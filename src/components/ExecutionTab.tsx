@@ -9,23 +9,24 @@ import {
   AlertDescription,
   AlertIcon,
   AlertTitle,
+  HStack,
 } from "@chakra-ui/react";
+import { SaveDialogReturnValue } from "electron";
 import { useAtom, useAtomValue } from "jotai";
 import { FC, useEffect, useRef, useState } from "react";
 import { SUPPORTED_PLATFORM_ARCHS } from "src/constants/global";
-import { bedAtom, fastaAtom, filesAtom, outputAtom, paramsAtom } from "src/jotai/execute";
+import { bedAtom, fastaAtom, filesAtom, paramsAtom } from "src/jotai/execute";
 import { osAtom } from "src/jotai/os";
 
 const spaces = "  ";
 
 export const ExecutionTab: FC = () => {
   const toast = useToast();
-  const [executing, setExecuting] = useState(false);
+  const [status, setStatus] = useState<"idle" | "executing" | "finished">("idle");
   const [indexesOut, setIndexesOut] = useState("");
   const [cmdOut, setCmdOut] = useState("");
   const [fasta] = useAtom(fastaAtom);
   const [bed] = useAtom(bedAtom);
-  const [output] = useAtom(outputAtom);
   const files = useAtomValue(filesAtom);
   const outRef = useRef(null);
   const os = useAtomValue(osAtom);
@@ -45,7 +46,7 @@ export const ExecutionTab: FC = () => {
             status: "error",
           });
         }
-        setExecuting(false);
+        setStatus("finished");
       }
     });
   }, []);
@@ -53,7 +54,7 @@ export const ExecutionTab: FC = () => {
   const allParams: Record<string, string | boolean> = {
     fasta,
     regions: bed,
-    "str-vcf": output,
+    "str-vcf": "str_calls.vcf.gz",
     ...params,
     bams: files,
   };
@@ -71,7 +72,7 @@ export const ExecutionTab: FC = () => {
   const cmdStr = `${os.resourcesPath}/hipstr/${os.platform}-${os.arch}/HipSTR${formattedParams}`;
 
   const osSupported = SUPPORTED_PLATFORM_ARCHS.includes(`${os.platform}-${os.arch}`);
-  const validParameters = osSupported && !!fasta && !!bed && !!output;
+  const validParameters = osSupported && !!fasta && !!bed;
   return (
     <VStack gap="2" alignItems="flex-start">
       <Heading as="h3" size="sm">
@@ -87,8 +88,8 @@ export const ExecutionTab: FC = () => {
         overflowY="auto"
         overflowX="auto"
         h="575px"
-        bg="#111416"
-        color="#eeeeec"
+        bg="#eeeeec"
+        color="#111416"
       >
         {!cmdOut ? cmdStr : ""}
         {indexesOut ? `${indexesOut}\n\n\n` : ""}
@@ -104,36 +105,63 @@ export const ExecutionTab: FC = () => {
       )}
 
       <Divider mt="4" />
-      <Button
-        size="sm"
-        isDisabled={!validParameters || executing}
-        onClick={async () => {
-          setIndexesOut("");
-          setCmdOut("");
-          setExecuting(true);
-          // Check fasta index
-          if (!(await hasIndexFile(fasta))) {
-            setIndexesOut((prev) => `${prev}\nFasta index not found, creating..`);
-            if (!(await createIndexFile("samtools", fasta))) {
-              setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
-            }
-          }
-          // Check files index
-          for (const file of files) {
-            if (!(await hasIndexFile(file))) {
-              setIndexesOut((prev) => `${prev}\n${file} index not found, creating..`);
-              if (!(await createIndexFile("samtools", file))) {
+      <HStack>
+        <Button
+          size="sm"
+          isDisabled={!validParameters || status === "executing"}
+          onClick={async () => {
+            setIndexesOut("");
+            setCmdOut("");
+            setStatus("executing");
+            // Check fasta index
+            if (!(await hasIndexFile(fasta))) {
+              setIndexesOut((prev) => `${prev}\nFasta index not found, creating..`);
+              if (!(await createIndexFile("samtools", fasta))) {
                 setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
               }
             }
-          }
-          setCmdOut((prev) => `${prev ? "\n" : ""}${cmdStr}`);
-          // Execute HipSTR
-          await ipcRender.invoke("execute", cmdStr);
-        }}
-      >
-        Execute
-      </Button>
+            // Check files index
+            for (const file of files) {
+              if (!(await hasIndexFile(file))) {
+                setIndexesOut((prev) => `${prev}\n${file} index not found, creating..`);
+                if (!(await createIndexFile("samtools", file))) {
+                  setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
+                }
+              }
+            }
+            setCmdOut((prev) => `${prev ? "\n" : ""}${cmdStr}`);
+            // Execute HipSTR
+            await ipcRender.invoke("execute", cmdStr);
+          }}
+        >
+          Execute
+        </Button>
+        <Button
+          size="sm"
+          ml={2}
+          isDisabled={status !== "finished"}
+          onClick={async () => {
+            const result: SaveDialogReturnValue = await electron.dialog("showSaveDialog", {
+              filters: [{ name: "Log files", extensions: ["txt"] }],
+              defaultPath: "hipstr-log.txt",
+            });
+            console.log(result);
+
+            if (result.canceled || !result.filePath) {
+              return;
+            }
+
+            try {
+              await electron.fs("copyFileSync", ["log.txt", result.filePath]);
+            } catch (err) {
+              console.error(err);
+              alert("Failed to save log file");
+            }
+          }}
+        >
+          Save Log
+        </Button>
+      </HStack>
     </VStack>
   );
 };

@@ -6,5 +6,4 @@ import { atomWithLocalStorage } from "src/lib/atomWithLocalStorage";
 export const filesAtom = atomWithLocalStorage("files", []);
 export const fastaAtom = atomWithLocalStorage("fasta", "");
 export const bedAtom = atomWithLocalStorage("bed", "");
-export const outputAtom = atomWithLocalStorage("output", "");
 export const paramsAtom = atomWithLocalStorage("params", null);

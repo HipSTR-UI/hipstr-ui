@@ -1,32 +1,17 @@
 import { Heading, Button, VStack, useToast, Text, Divider, Input, Checkbox } from "@chakra-ui/react";
 import { OpenDialogReturnValue } from "electron";
 import { useAtom } from "jotai";
-import { FC, useEffect } from "react";
+import { FC } from "react";
 import { parameters } from "src/constants/parameters";
-import { usePathSeparator } from "src/hooks/usePathSeparator";
-import { bedAtom, fastaAtom, outputAtom, paramsAtom } from "src/jotai/execute";
-
-const OUTPUT_FILE_NAME = "str_calls.vcf.gz";
+import { bedAtom, fastaAtom, paramsAtom } from "src/jotai/execute";
 
 export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [fasta, setFasta] = useAtom(fastaAtom);
   const [bed, setBed] = useAtom(bedAtom);
-  const [output, setOutput] = useAtom(outputAtom);
   const [params, setParams] = useAtom(paramsAtom);
-  const pathSep = usePathSeparator();
 
-  useEffect(() => {
-    (async () => {
-      if (!bed || !!output) {
-        return;
-      }
-      const dirname = bed.split(pathSep).slice(0, -1).join(pathSep);
-      setOutput(`${dirname}${pathSep}${OUTPUT_FILE_NAME}`);
-    })();
-  }, [bed]);
-
-  const validParameters = !!fasta && !!bed && !!output;
+  const validParameters = !!fasta && !!bed;
   return (
     <VStack gap="6" alignItems="flex-start">
       <FileParameter
@@ -56,15 +41,6 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             return;
           }
           setBed(path);
-        }}
-      />
-
-      <FileParameter
-        label="Output file"
-        value={output}
-        properties={["openDirectory"]}
-        onChange={(path) => {
-          setOutput(`${path}${pathSep}${OUTPUT_FILE_NAME}`);
         }}
       />
 
