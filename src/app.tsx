@@ -1,8 +1,9 @@
-import { ChakraProvider, Tabs, TabList, TabPanels, Tab, TabPanel } from "@chakra-ui/react";
+import { ChakraProvider, Tabs, TabList, TabPanels, Tab, TabPanel, Image } from "@chakra-ui/react";
 import { useState } from "react";
 import { ExecutionTab } from "src/components/ExecutionTab";
 import { FilesTab } from "src/components/FilesTab";
 import { ParametersTab } from "src/components/ParametersTab";
+import { hipstr } from "src/images";
 import { theme } from "src/lib/theme";
 
 export default function App() {
@@ -10,6 +11,7 @@ export default function App() {
 
   return (
     <ChakraProvider theme={theme}>
+      <Image src={hipstr} alt="HipSTR" height={70} />
       <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)}>
         <TabList>
           <Tab>Files</Tab>
