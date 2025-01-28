@@ -1,10 +1,10 @@
-import { Table, Tbody, Td, Th, Thead, Tr, useToast, VStack, Text } from "@chakra-ui/react";
+import { Table, Tbody, Td, Th, Thead, Tr, useToast, VStack, Text, Button } from "@chakra-ui/react";
 import { useAtom } from "jotai";
 import { FC, useEffect, useState } from "react";
 import { FileParameter } from "src/components/FileParameter";
 import { bedAtom } from "src/jotai/execute";
 
-export const BedTab: FC = () => {
+export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [bed, setBed] = useAtom(bedAtom);
   const [bedContent, setBedContent] = useState<string[]>([]);
@@ -66,6 +66,9 @@ export const BedTab: FC = () => {
           </Tbody>
         </Table>
       )}
+      <Button size="sm" onClick={onFinish}>
+        Continue
+      </Button>
     </VStack>
   );
 };
