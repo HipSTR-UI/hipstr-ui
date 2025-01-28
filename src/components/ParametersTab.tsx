@@ -1,17 +1,16 @@
-import { Heading, Button, VStack, useToast, Text, Divider, Input, Checkbox } from "@chakra-ui/react";
-import { OpenDialogReturnValue } from "electron";
+import { Button, Checkbox, Divider, Heading, Input, Text, VStack, useToast } from "@chakra-ui/react";
 import { useAtom } from "jotai";
 import { FC } from "react";
+import { FileParameter } from "src/components/FileParameter";
 import { parameters } from "src/constants/parameters";
-import { bedAtom, fastaAtom, paramsAtom } from "src/jotai/execute";
+import { fastaAtom, paramsAtom } from "src/jotai/execute";
 
 export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [fasta, setFasta] = useAtom(fastaAtom);
-  const [bed, setBed] = useAtom(bedAtom);
   const [params, setParams] = useAtom(paramsAtom);
 
-  const validParameters = !!fasta && !!bed;
+  const validParameters = !!fasta;
   return (
     <VStack gap="6" alignItems="flex-start">
       <FileParameter
@@ -26,21 +25,6 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             return;
           }
           setFasta(path);
-        }}
-      />
-
-      <FileParameter
-        label="BED file"
-        value={bed}
-        onChange={(path) => {
-          if (!/\.bed$/i.test(path)) {
-            toast({
-              title: "File doesn't have bed extension",
-              status: "error",
-            });
-            return;
-          }
-          setBed(path);
         }}
       />
 
@@ -112,42 +96,6 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
       >
         Continue
       </Button>
-    </VStack>
-  );
-};
-
-type FileParameterProps = {
-  label: string;
-  value: string;
-  properties?: string[];
-  onChange: (path: string) => void;
-};
-
-const FileParameter: FC<FileParameterProps> = ({ label, value, onChange, properties = ["openFile"] }) => {
-  return (
-    <VStack gap="1" alignItems="flex-start">
-      <Heading as="h3" size="sm">
-        {label}
-      </Heading>
-      <Button
-        size="sm"
-        onClick={async () => {
-          const dialogConfig = {
-            title: "Select file/folder",
-            buttonLabel: "Select",
-            properties,
-          };
-          const result = (await electron.dialog("showOpenDialog", dialogConfig)) as OpenDialogReturnValue;
-          if (result.canceled) {
-            return;
-          }
-          const selectedFile = result.filePaths[0];
-          onChange(selectedFile);
-        }}
-      >
-        Select
-      </Button>
-      {value && <Text fontSize="md">{value}</Text>}
     </VStack>
   );
 };

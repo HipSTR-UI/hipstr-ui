@@ -1,5 +1,6 @@
 import { ChakraProvider, Tabs, TabList, TabPanels, Tab, TabPanel, Image } from "@chakra-ui/react";
 import { useState } from "react";
+import { BedTab } from "src/components/BedTab";
 import { ExecutionTab } from "src/components/ExecutionTab";
 import { FilesTab } from "src/components/FilesTab";
 import { ParametersTab } from "src/components/ParametersTab";
@@ -15,6 +16,7 @@ export default function App() {
       <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)}>
         <TabList>
           <Tab>Files</Tab>
+          <Tab>BED</Tab>
           <Tab>Parameters</Tab>
           <Tab>Execution</Tab>
         </TabList>
@@ -22,6 +24,9 @@ export default function App() {
         <TabPanels>
           <TabPanel>
             <FilesTab onFinish={() => setTabIndex(1)} />
+          </TabPanel>
+          <TabPanel>
+            <BedTab />
           </TabPanel>
           <TabPanel>
             <ParametersTab onFinish={() => setTabIndex(2)} />
