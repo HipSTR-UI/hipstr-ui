@@ -79,7 +79,7 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         </Button>
       </HStack>
 
-      {files?.length > 0 && <Text>{files?.length} files selected</Text>}
+      {files?.length > 0 && <Text fontWeight="bold">{files?.length} files selected</Text>}
       <Table size="sm" variant="simple">
         <Thead>
           <Tr>

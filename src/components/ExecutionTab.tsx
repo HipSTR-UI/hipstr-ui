@@ -56,7 +56,7 @@ export const ExecutionTab: FC = () => {
     regions: bed,
     "str-vcf": "str_calls.vcf.gz",
     ...params,
-    bams: files,
+    bams: files.map((file: { path: string }) => file.path),
   };
 
   const formattedParams = Object.entries(allParams)
@@ -121,10 +121,10 @@ export const ExecutionTab: FC = () => {
               }
             }
             // Check files index
-            for (const file of files) {
-              if (!(await hasIndexFile(file))) {
-                setIndexesOut((prev) => `${prev}\n${file} index not found, creating..`);
-                if (!(await createIndexFile("samtools", file))) {
+            for (const file of files as { path: string }[]) {
+              if (!(await hasIndexFile(file.path))) {
+                setIndexesOut((prev) => `${prev}\n${file.path} index not found, creating..`);
+                if (!(await createIndexFile("samtools", file.path))) {
                   setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
                 }
               }
@@ -145,7 +145,6 @@ export const ExecutionTab: FC = () => {
               filters: [{ name: "Log files", extensions: ["txt"] }],
               defaultPath: "hipstr-log.txt",
             });
-            console.log(result);
 
             if (result.canceled || !result.filePath) {
               return;

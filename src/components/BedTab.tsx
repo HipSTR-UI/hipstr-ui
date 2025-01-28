@@ -35,7 +35,7 @@ export const BedTab: FC = () => {
           setBed(path);
         }}
       />
-      {bed && <Text>{bedContent.length} markers found</Text>}
+      {bed && <Text fontWeight="bold">{bedContent.length} markers found</Text>}
       {bed && (
         <Table size="sm" variant="simple" mt={4}>
           <Thead>
