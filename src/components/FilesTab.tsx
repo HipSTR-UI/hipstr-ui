@@ -1,8 +1,23 @@
-import { Heading, Button, VStack, HStack, UnorderedList, ListItem, useToast, Divider } from "@chakra-ui/react";
+import {
+  Heading,
+  Button,
+  VStack,
+  HStack,
+  useToast,
+  Divider,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Text,
+} from "@chakra-ui/react";
 import { OpenDialogReturnValue } from "electron";
 import { useAtom } from "jotai";
 import { FC } from "react";
 import { filesAtom } from "src/jotai/execute";
+import { formatFileSize } from "src/lib/file";
 
 async function getFilesFromPath(path: string) {
   let result: string[] = [];
@@ -41,12 +56,15 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             if (result.canceled) {
               return;
             }
-            let fileList: string[] = [];
+            let fileList: { path: string; size: number }[] = [];
             for (const filePath of result.filePaths) {
-              fileList = fileList.concat(await getFilesFromPath(filePath));
+              for (const file of await getFilesFromPath(filePath)) {
+                const stats = await electron.fs("statSync", [file]);
+                fileList.push({ path: file, size: stats.size });
+              }
             }
             // filter for valid files
-            fileList = fileList.filter((path) => /\.(bam|cram)$/i.test(path));
+            fileList = fileList.filter((file) => /\.(bam|cram)$/i.test(file.path));
             if (fileList.length < 1) {
               toast({
                 title: "No files with bam/cram extension found",
@@ -60,11 +78,26 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           Select files/folder
         </Button>
       </HStack>
-      <UnorderedList>
-        {files?.map((file) => (
-          <ListItem key={file}>{file}</ListItem>
-        ))}
-      </UnorderedList>
+
+      {files?.length > 0 && <Text>{files?.length} files selected</Text>}
+      <Table size="sm" variant="simple">
+        <Thead>
+          <Tr>
+            <Th>File Path</Th>
+            <Th>Size</Th>
+          </Tr>
+        </Thead>
+        <Tbody>
+          {files?.map((file: { path: string; size: number }) => {
+            return (
+              <Tr key={file.path}>
+                <Td>{file.path}</Td>
+                <Td>{formatFileSize(file.size)}</Td>
+              </Tr>
+            );
+          })}
+        </Tbody>
+      </Table>
 
       <Divider mt="4" />
       <Button

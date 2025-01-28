@@ -16,7 +16,7 @@ const createWindow = () => {
   // Create the browser window.
   mainWindow = new BrowserWindow({
     width: 1200,
-    height: 800,
+    height: 900,
     webPreferences: {
       preload: path.join(__dirname, "preload.js"),
     },
@@ -118,6 +118,7 @@ ipcMain.handle("dirName", (event: IpcMainInvokeEvent) => {
 });
 
 ipcMain.handle("fs", async (event: IpcMainInvokeEvent, method: string, params: any[]) => {
+  console.log(method, params);
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
   return fs[method](...params);
