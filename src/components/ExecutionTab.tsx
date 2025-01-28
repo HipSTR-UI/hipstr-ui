@@ -160,6 +160,30 @@ export const ExecutionTab: FC = () => {
         >
           Save Log
         </Button>
+        <Button
+          size="sm"
+          ml={2}
+          isDisabled={status !== "finished"}
+          onClick={async () => {
+            const result: SaveDialogReturnValue = await electron.dialog("showSaveDialog", {
+              filters: [{ name: "VCF files", extensions: ["vcf.gz"] }],
+              defaultPath: "str_calls.vcf.gz",
+            });
+
+            if (result.canceled || !result.filePath) {
+              return;
+            }
+
+            try {
+              await electron.fs("copyFileSync", ["str_calls.vcf.gz", result.filePath]);
+            } catch (err) {
+              console.error(err);
+              alert("Failed to save VCF file");
+            }
+          }}
+        >
+          Save VCF
+        </Button>
       </HStack>
     </VStack>
   );
