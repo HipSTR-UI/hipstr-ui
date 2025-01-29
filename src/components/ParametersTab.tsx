@@ -12,7 +12,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
 
   const validParameters = !!fasta;
   return (
-    <VStack gap="6" alignItems="flex-start">
+    <VStack gap="6" alignItems="flex-start" pb="4">
       <FileParameter
         label="Reference genome fasta"
         value={fasta}

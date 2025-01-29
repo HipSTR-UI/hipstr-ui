@@ -74,7 +74,7 @@ export const ExecutionTab: FC = () => {
   const osSupported = SUPPORTED_PLATFORM_ARCHS.includes(`${os.platform}-${os.arch}`);
   const validParameters = osSupported && !!fasta && !!bed;
   return (
-    <VStack gap="2" alignItems="flex-start">
+    <VStack gap="2" alignItems="flex-start" pb="4">
       <Heading as="h3" size="sm">
         Command to execute
       </Heading>

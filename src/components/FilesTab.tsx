@@ -39,7 +39,7 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [files, setFiles] = useAtom(filesAtom);
 
   return (
-    <VStack gap="2" alignItems="flex-start">
+    <VStack gap="2" alignItems="flex-start" pb="4">
       <Heading as="h3" size="sm">
         Input files
       </Heading>

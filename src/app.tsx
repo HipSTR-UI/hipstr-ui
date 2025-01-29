@@ -12,10 +12,17 @@ export default function App() {
 
   return (
     <ChakraProvider theme={theme}>
-      <div>
+      <HStack pt="4">
         <Image src={hipstr} alt="HipSTR" height={70} />
-      </div>
-      <Tabs index={tabIndex} onChange={(index) => setTabIndex(index)} flexGrow={1} overflowY="auto">
+      </HStack>
+      <Tabs
+        index={tabIndex}
+        onChange={(index) => setTabIndex(index)}
+        flexGrow={1}
+        display="flex"
+        flexDirection="column"
+        minH={0}
+      >
         <TabList>
           <Tab>Files</Tab>
           <Tab>BED</Tab>
@@ -23,7 +30,7 @@ export default function App() {
           <Tab>Execution</Tab>
         </TabList>
 
-        <TabPanels>
+        <TabPanels flexGrow={1} overflowY="auto" display="flex">
           <TabPanel>
             <FilesTab onFinish={() => setTabIndex(1)} />
           </TabPanel>

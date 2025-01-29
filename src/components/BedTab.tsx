@@ -20,7 +20,7 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   }, [bed]);
 
   return (
-    <VStack alignItems="flex-start">
+    <VStack alignItems="flex-start" pb="4">
       <FileParameter
         label="BED file"
         value={bed}
