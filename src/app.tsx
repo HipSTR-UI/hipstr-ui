@@ -45,12 +45,12 @@ export default function App() {
           </TabPanel>
         </TabPanels>
       </Tabs>
-      <HStack id="footer" bg="gray.100" p="4" justifyContent="center">
-        <Link href="https://github.com/tfwillems/HipSTR" target="_blank">
+      <HStack id="footer" bg="gray.100" px="4" py="2" justifyContent="center">
+        <Link href="https://github.com/tfwillems/HipSTR" target="_blank" fontSize="small">
           GitHub
         </Link>
         <Text>•</Text>
-        <Link href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5482724/" target="_blank">
+        <Link href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5482724/" target="_blank" fontSize="small">
           Paper
         </Link>
       </HStack>
