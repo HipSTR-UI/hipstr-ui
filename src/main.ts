@@ -4,6 +4,7 @@ import os from "os";
 import process from "process";
 import child_process from "child_process";
 import fs from "node:fs";
+import { GetPathName } from "src/types/getPath";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -25,14 +26,13 @@ const createWindow = () => {
   // and load the index.html of the app.
   if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
     mainWindow.loadURL(MAIN_WINDOW_VITE_DEV_SERVER_URL);
+    // Open the DevTools only in development mode
+    mainWindow.webContents.openDevTools();
   } else {
     mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)).then(() => {
       mainWindow.webContents.send("main-to-render", "Ping 1 (send from main process)");
     });
   }
-
-  // Open the DevTools.
-  mainWindow.webContents.openDevTools();
 };
 
 // This method will be called when Electron has finished
@@ -152,4 +152,8 @@ ipcMain.on("render-to-main", (event, message) => {
 ipcMain.handle("render-to-main-to-render", (event, message) => {
   console.log(message); // Ping 2 (invoke from render process)
   return "Pong 2 (handle from main process)";
+});
+
+ipcMain.handle("getPath", (event: IpcMainInvokeEvent, name: GetPathName) => {
+  return app.getPath(name);
 });

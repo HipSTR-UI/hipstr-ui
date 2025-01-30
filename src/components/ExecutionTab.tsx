@@ -15,6 +15,7 @@ import { SaveDialogReturnValue } from "electron";
 import { useAtom, useAtomValue } from "jotai";
 import { FC, useEffect, useRef, useState } from "react";
 import { SUPPORTED_PLATFORM_ARCHS } from "src/constants/global";
+import { useGetPath } from "src/hooks/useGetPath";
 import { bedAtom, fastaAtom, filesAtom, paramsAtom } from "src/jotai/execute";
 import { osAtom } from "src/jotai/os";
 
@@ -31,6 +32,7 @@ export const ExecutionTab: FC = () => {
   const outRef = useRef(null);
   const os = useAtomValue(osAtom);
   const params = useAtomValue(paramsAtom);
+  const tempPath = useGetPath("temp");
 
   useEffect(() => {
     ipcRender.receive("main-to-render", (result: string | { exitCode: number }) => {
@@ -54,7 +56,7 @@ export const ExecutionTab: FC = () => {
   const allParams: Record<string, string | boolean> = {
     fasta,
     regions: bed,
-    "str-vcf": "str_calls.vcf.gz",
+    "str-vcf": tempPath + "str_calls.vcf.gz",
     ...params,
     bams: files.map((file: { path: string }) => file.path),
   };

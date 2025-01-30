@@ -31,16 +31,16 @@ export default function App() {
         </TabList>
 
         <TabPanels flexGrow={1} overflowY="auto" display="flex">
-          <TabPanel>
+          <TabPanel flexGrow={1}>
             <FilesTab onFinish={() => setTabIndex(1)} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel flexGrow={1}>
             <BedTab onFinish={() => setTabIndex(2)} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel flexGrow={1}>
             <ParametersTab onFinish={() => setTabIndex(3)} />
           </TabPanel>
-          <TabPanel>
+          <TabPanel flexGrow={1}>
             <ExecutionTab />
           </TabPanel>
         </TabPanels>

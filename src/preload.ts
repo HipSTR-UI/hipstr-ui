@@ -1,6 +1,7 @@
 // Disable no-unused-vars, broken for spread args
 /* eslint no-unused-vars: off */
 import { contextBridge, ipcRenderer } from "electron";
+import { GetPathName } from "src/types/getPath";
 
 const electronHandler = {
   dialog: (method: string, config: object) => ipcRenderer.invoke("dialog", method, config),
@@ -13,6 +14,7 @@ const electronHandler = {
   getPathSep: () => ipcRenderer.invoke("getPathSep"),
   dirName: () => ipcRenderer.invoke("dirName"),
   execSync: (command: string) => ipcRenderer.invoke("execSync", command),
+  getPath: (name: GetPathName) => ipcRenderer.invoke("getPath", name),
 };
 
 contextBridge.exposeInMainWorld("electron", electronHandler);
