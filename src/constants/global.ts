@@ -1,1 +1,1 @@
-export const SUPPORTED_PLATFORM_ARCHS = ["darwin-arm64"];
+export const SUPPORTED_PLATFORM_ARCHS = ["darwin-arm64", "linux-x64"];
