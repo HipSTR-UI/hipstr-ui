@@ -53,10 +53,11 @@ export const ExecutionTab: FC = () => {
     });
   }, []);
 
+  const strVcfPath = `${tempPath}/str_calls.vcf.gz`
   const allParams: Record<string, string | boolean> = {
     fasta,
     regions: bed,
-    "str-vcf": tempPath + "str_calls.vcf.gz",
+    "str-vcf": strVcfPath,
     ...params,
     bams: files.map((file: { path: string }) => file.path),
   };
@@ -153,7 +154,7 @@ export const ExecutionTab: FC = () => {
             }
 
             try {
-              await electron.fs("copyFileSync", ["log.txt", result.filePath]);
+              await electron.fs("copyFileSync", [`${tempPath}/log.txt`, result.filePath]);
             } catch (err) {
               console.error(err);
               alert("Failed to save log file");
@@ -177,7 +178,7 @@ export const ExecutionTab: FC = () => {
             }
 
             try {
-              await electron.fs("copyFileSync", ["str_calls.vcf.gz", result.filePath]);
+              await electron.fs("copyFileSync", [strVcfPath, result.filePath]);
             } catch (err) {
               console.error(err);
               alert("Failed to save VCF file");
