@@ -56,7 +56,7 @@ export const ExecutionTab: FC = () => {
     });
   }, []);
 
-  const strVcfPath = `${tempPath}/str_calls.vcf.gz`
+  const strVcfPath = `${tempPath}/str_calls.vcf.gz`;
   const allParams: Record<string, string | boolean> = {
     fasta,
     regions: bed,
@@ -71,12 +71,27 @@ export const ExecutionTab: FC = () => {
       if (value && value !== true) {
         valueStr = Array.isArray(value) ? ` ${value.join(`,`)}` : ` ${value}`;
       }
-      const separator = os.platform === 'win32' ? ' ' : ` \\\n${spaces}`
+      const separator = os.platform === "win32" ? " " : ` \\\n${spaces}`;
       return `${separator}--${name}${valueStr}`;
     })
     .join("");
 
-  const cmdStr = joinPath(pathSep, os.resourcesPath, "hipstr", `${os.platform}-${os.arch}`, `HipSTR${formattedParams}`);
+  const cmdStr = joinPath(
+    pathSep,
+    os.resourcesPath,
+    "binaries",
+    "hipstr",
+    `${os.platform}-${os.arch}`,
+    `HipSTR${formattedParams}`
+  );
+  const samtoolsPath = joinPath(
+    pathSep,
+    os.resourcesPath,
+    "binaries",
+    "samtools",
+    `${os.platform}-${os.arch}`,
+    "samtools"
+  );
 
   const osSupported = SUPPORTED_PLATFORM_ARCHS.includes(`${os.platform}-${os.arch}`);
   const validParameters = osSupported && !!fasta && !!bed;
@@ -106,8 +121,12 @@ export const ExecutionTab: FC = () => {
       {!osSupported && (
         <Alert status="error">
           <AlertIcon />
-          <AlertTitle>OS/Architecture ({os.platform}-{os.arch}) not supported</AlertTitle>
-          <AlertDescription>We don't support your OS/Arch. yet. Supported OS/Arch. are: {SUPPORTED_PLATFORM_ARCHS.join(', ')}</AlertDescription>
+          <AlertTitle>
+            OS/Architecture ({os.platform}-{os.arch}) not supported
+          </AlertTitle>
+          <AlertDescription>
+            We don't support your OS/Arch. yet. Supported OS/Arch. are: {SUPPORTED_PLATFORM_ARCHS.join(", ")}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -123,7 +142,7 @@ export const ExecutionTab: FC = () => {
             // Check fasta index
             if (!(await hasIndexFile(fasta))) {
               setIndexesOut((prev) => `${prev}\nFasta index not found, creating..`);
-              if (!(await createIndexFile("samtools", fasta))) {
+              if (!(await createIndexFile(samtoolsPath, fasta))) {
                 setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
               }
             }
@@ -131,7 +150,7 @@ export const ExecutionTab: FC = () => {
             for (const file of files as { path: string }[]) {
               if (!(await hasIndexFile(file.path))) {
                 setIndexesOut((prev) => `${prev}\n${file.path} index not found, creating..`);
-                if (!(await createIndexFile("samtools", file.path))) {
+                if (!(await createIndexFile(samtoolsPath, file.path))) {
                   setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
                 }
               }
