@@ -19,7 +19,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         onChange={(path) => {
           if (!/\.fasta|\.fa$/i.test(path)) {
             toast({
-              title: "File doesn't have fasta extension",
+              title: "File doesn't have .fasta extension",
               status: "error",
             });
             return;

@@ -16,8 +16,10 @@ import { useAtom, useAtomValue } from "jotai";
 import { FC, useEffect, useRef, useState } from "react";
 import { SUPPORTED_PLATFORM_ARCHS } from "src/constants/global";
 import { useGetPath } from "src/hooks/useGetPath";
+import { usePathSeparator } from "src/hooks/usePathSeparator";
 import { bedAtom, fastaAtom, filesAtom, paramsAtom } from "src/jotai/execute";
 import { osAtom } from "src/jotai/os";
+import { joinPath } from "src/lib/path";
 
 const spaces = "  ";
 
@@ -33,6 +35,7 @@ export const ExecutionTab: FC = () => {
   const os = useAtomValue(osAtom);
   const params = useAtomValue(paramsAtom);
   const tempPath = useGetPath("temp");
+  const pathSep = usePathSeparator();
 
   useEffect(() => {
     ipcRender.receive("main-to-render", (result: string | { exitCode: number }) => {
@@ -68,11 +71,12 @@ export const ExecutionTab: FC = () => {
       if (value && value !== true) {
         valueStr = Array.isArray(value) ? ` ${value.join(`,`)}` : ` ${value}`;
       }
-      return ` \\\n${spaces}--${name}${valueStr}`;
+      const separator = os.platform === 'win32' ? ' ' : ` \\\n${spaces}`
+      return `${separator}--${name}${valueStr}`;
     })
     .join("");
 
-  const cmdStr = `${os.resourcesPath}/hipstr/${os.platform}-${os.arch}/HipSTR${formattedParams}`;
+  const cmdStr = joinPath(pathSep, os.resourcesPath, "hipstr", `${os.platform}-${os.arch}`, `HipSTR${formattedParams}`);
 
   const osSupported = SUPPORTED_PLATFORM_ARCHS.includes(`${os.platform}-${os.arch}`);
   const validParameters = osSupported && !!fasta && !!bed;
@@ -102,8 +106,8 @@ export const ExecutionTab: FC = () => {
       {!osSupported && (
         <Alert status="error">
           <AlertIcon />
-          <AlertTitle>Your OS/Arch is not supported!</AlertTitle>
-          <AlertDescription>This software doesn't support your OS/Architecture yet.</AlertDescription>
+          <AlertTitle>OS/Architecture ({os.platform}-{os.arch}) not supported</AlertTitle>
+          <AlertDescription>We don't support your OS/Arch. yet. Supported OS/Arch. are: {SUPPORTED_PLATFORM_ARCHS.join(', ')}</AlertDescription>
         </Alert>
       )}
 
@@ -134,7 +138,7 @@ export const ExecutionTab: FC = () => {
             }
             setCmdOut((prev) => `${prev ? "\n" : ""}${cmdStr}`);
             // Execute HipSTR
-            await ipcRender.invoke("execute", cmdStr);
+            await ipcRender.invoke("execute", { command: cmdStr, logToFile: true });
           }}
         >
           Execute
@@ -204,7 +208,7 @@ async function createIndexFile(samtoolsPath: string, path: string) {
 }
 
 async function hasIndexFile(path: string) {
-  return await electron.fs("existsSync", `${path}.${getIndexExtension(path)}`);
+  return await electron.fs("existsSync", [`${path}.${getIndexExtension(path)}`]);
 }
 
 function getIndexExtension(path: string) {

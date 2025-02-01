@@ -86,9 +86,9 @@ ipcMain.handle("getFilesFromFolder", async (event: IpcMainInvokeEvent, path: str
   );
 });
 
-ipcMain.handle("execute", async (event: IpcMainInvokeEvent, command: string) => {
+ipcMain.handle("execute", async (event: IpcMainInvokeEvent, {command, logToFile}: {command: string, logToFile: boolean}) => {
   let handle: number | undefined;
-  if (command.startsWith("./hipstr")) {
+  if (logToFile) {
     const tempPath = app.getPath("temp");
     handle = fs.openSync(`${tempPath}/log.txt`, "w");
   }

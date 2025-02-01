@@ -27,7 +27,7 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         onChange={(path) => {
           if (!/\.bed$/i.test(path)) {
             toast({
-              title: "File doesn't have bed extension",
+              title: "File doesn't have .bed extension",
               status: "error",
             });
             return;
