@@ -1,7 +1,7 @@
 {
   "name": "hipstr-ui",
   "productName": "hipstr-ui",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "HipSTR software UI",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -44,11 +44,14 @@
     "@chakra-ui/react": "^2.8.2",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
+    "@tanstack/react-table": "^8.20.6",
     "electron-squirrel-startup": "^1.0.0",
     "framer-motion": "^11.0.25",
     "jotai": "^2.7.2",
+    "lucide-react": "^0.474.0",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
     "@rollup/rollup-linux-x64-gnu": "4.32.1"

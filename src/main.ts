@@ -86,29 +86,32 @@ ipcMain.handle("getFilesFromFolder", async (event: IpcMainInvokeEvent, path: str
   );
 });
 
-ipcMain.handle("execute", async (event: IpcMainInvokeEvent, {command, logToFile}: {command: string, logToFile: boolean}) => {
-  let handle: number | undefined;
-  if (logToFile) {
-    const tempPath = app.getPath("temp");
-    handle = fs.openSync(`${tempPath}/log.txt`, "w");
+ipcMain.handle(
+  "execute",
+  async (event: IpcMainInvokeEvent, { command, logToFile }: { command: string; logToFile: boolean }) => {
+    let handle: number | undefined;
+    if (logToFile) {
+      const tempPath = app.getPath("temp");
+      handle = fs.openSync(`${tempPath}/log.txt`, "w");
+    }
+    const proc = child_process.spawn(command, [], {
+      shell: true,
+      stdio: ["ignore", "pipe", "pipe"],
+    });
+    proc.stdout.on("data", (data) => {
+      handle && fs.appendFileSync(handle, data.toString());
+      mainWindow.webContents.send("main-to-render", data.toString());
+    });
+    proc.stderr.on("data", (data) => {
+      handle && fs.appendFileSync(handle, data.toString());
+      mainWindow.webContents.send("main-to-render", data.toString());
+    });
+    proc.on("close", (code) => {
+      handle && fs.closeSync(handle);
+      mainWindow.webContents.send("main-to-render", { exitCode: code });
+    });
   }
-  const proc = child_process.spawn(command, [], {
-    shell: true,
-    stdio: ["ignore", "pipe", "pipe"],
-  });
-  proc.stdout.on("data", (data) => {
-    handle && fs.appendFileSync(handle, data.toString());
-    mainWindow.webContents.send("main-to-render", data.toString());
-  });
-  proc.stderr.on("data", (data) => {
-    handle && fs.appendFileSync(handle, data.toString());
-    mainWindow.webContents.send("main-to-render", data.toString());
-  });
-  proc.on("close", (code) => {
-    handle && fs.closeSync(handle);
-    mainWindow.webContents.send("main-to-render", { exitCode: code });
-  });
-});
+);
 
 ipcMain.handle("execSync", (event: IpcMainInvokeEvent, command: string) => {
   return child_process.execSync(command).toString();
@@ -156,4 +159,14 @@ ipcMain.handle("render-to-main-to-render", (event, message) => {
 
 ipcMain.handle("getPath", (event: IpcMainInvokeEvent, name: GetPathName) => {
   return app.getPath(name);
+});
+
+ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, path: string) => {
+  try {
+    await child_process.execSync(`gunzip -fdk ${path}`).toString();
+    return true;
+  } catch (error) {
+    console.error(error);
+    return error;
+  }
 });

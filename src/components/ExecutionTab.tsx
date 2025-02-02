@@ -12,18 +12,18 @@ import {
   HStack,
 } from "@chakra-ui/react";
 import { SaveDialogReturnValue } from "electron";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FC, useEffect, useRef, useState } from "react";
 import { SUPPORTED_PLATFORM_ARCHS } from "src/constants/global";
 import { useGetPath } from "src/hooks/useGetPath";
 import { usePathSeparator } from "src/hooks/usePathSeparator";
-import { bedAtom, fastaAtom, filesAtom, paramsAtom } from "src/jotai/execute";
+import { bedAtom, fastaAtom, filesAtom, paramsAtom, vcfPathAtom } from "src/jotai/execute";
 import { osAtom } from "src/jotai/os";
 import { joinPath } from "src/lib/path";
 
 const spaces = "  ";
 
-export const ExecutionTab: FC = () => {
+export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [status, setStatus] = useState<"idle" | "executing" | "finished">("idle");
   const [indexesOut, setIndexesOut] = useState("");
@@ -36,8 +36,13 @@ export const ExecutionTab: FC = () => {
   const params = useAtomValue(paramsAtom);
   const tempPath = useGetPath("temp");
   const pathSep = usePathSeparator();
+  const setVcfPath = useSetAtom(vcfPathAtom);
+  const strVcfPath = `${tempPath}/str_calls.vcf.gz`;
 
   useEffect(() => {
+    if (!strVcfPath) {
+      return;
+    }
     ipcRender.receive("main-to-render", (result: string | { exitCode: number }) => {
       if (typeof result === "string") {
         setCmdOut((prev) => `${prev}\n${result}`);
@@ -51,12 +56,12 @@ export const ExecutionTab: FC = () => {
             status: "error",
           });
         }
+        setVcfPath(strVcfPath);
         setStatus("finished");
       }
     });
-  }, []);
+  }, [strVcfPath]);
 
-  const strVcfPath = `${tempPath}/str_calls.vcf.gz`;
   const allParams: Record<string, string | boolean> = {
     fasta,
     regions: bed,
@@ -209,6 +214,9 @@ export const ExecutionTab: FC = () => {
           }}
         >
           Save VCF
+        </Button>
+        <Button size="sm" ml={2} isDisabled={status !== "finished"} onClick={onFinish}>
+          Continue
         </Button>
       </HStack>
     </VStack>

@@ -15,6 +15,7 @@ const electronHandler = {
   dirName: () => ipcRenderer.invoke("dirName"),
   execSync: (command: string) => ipcRenderer.invoke("execSync", command),
   getPath: (name: GetPathName) => ipcRenderer.invoke("getPath", name),
+  extractGz: (path: string) => ipcRenderer.invoke("extractGz", path),
 };
 
 contextBridge.exposeInMainWorld("electron", electronHandler);
