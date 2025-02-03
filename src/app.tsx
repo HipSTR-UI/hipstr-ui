@@ -7,14 +7,25 @@ import { ParametersTab } from "src/components/ParametersTab";
 import { ResultsTab } from "src/components/ResultsTab";
 import { hipstr } from "src/images";
 import { theme } from "src/lib/theme";
+import { useTranslation } from "react-i18next";
+import { useInitI18n } from "./i18n";
+import { LanguageToggle } from "src/components/LanguageToggle";
 
 export default function App() {
+  const { initialized } = useInitI18n();
+  if (!initialized) return null;
+  return <AppComponent />;
+}
+
+const AppComponent = () => {
   const [tabIndex, setTabIndex] = useState(0);
+  const { t } = useTranslation();
 
   return (
     <ChakraProvider theme={theme}>
-      <HStack pt="4">
+      <HStack pt="4" justifyContent="space-between">
         <Image src={hipstr} alt="HipSTR" height={70} />
+        <LanguageToggle />
       </HStack>
       <Tabs
         index={tabIndex}
@@ -25,11 +36,11 @@ export default function App() {
         minH={0}
       >
         <TabList>
-          <Tab>Files</Tab>
-          <Tab>BED</Tab>
-          <Tab>Parameters</Tab>
-          <Tab>Execution</Tab>
-          <Tab>Results</Tab>
+          <Tab>{t("files")}</Tab>
+          <Tab>{t("bed")}</Tab>
+          <Tab>{t("parameters")}</Tab>
+          <Tab>{t("execution")}</Tab>
+          <Tab>{t("results")}</Tab>
         </TabList>
 
         <TabPanels flexGrow={1} overflowY="auto" display="flex">
@@ -56,9 +67,9 @@ export default function App() {
         </Link>
         <Text>•</Text>
         <Link href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5482724/" target="_blank" fontSize="small">
-          Paper
+          {t("paper")}
         </Link>
       </HStack>
     </ChakraProvider>
   );
-}
+};

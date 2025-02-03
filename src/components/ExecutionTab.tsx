@@ -14,6 +14,7 @@ import {
 import { SaveDialogReturnValue } from "electron";
 import { useAtom, useAtomValue, useSetAtom } from "jotai";
 import { FC, useEffect, useRef, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { SUPPORTED_PLATFORM_ARCHS } from "src/constants/global";
 import { useGetPath } from "src/hooks/useGetPath";
 import { usePathSeparator } from "src/hooks/usePathSeparator";
@@ -25,6 +26,7 @@ const spaces = "  ";
 
 export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
+  const { t } = useTranslation();
   const [status, setStatus] = useState<"idle" | "executing" | "finished">("idle");
   const [indexesOut, setIndexesOut] = useState("");
   const [cmdOut, setCmdOut] = useState("");
@@ -52,7 +54,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
       } else {
         if (result.exitCode && result.exitCode !== 0) {
           toast({
-            title: "Command execution failed",
+            title: t("commandExecutionFailed"),
             status: "error",
           });
         }
@@ -103,7 +105,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   return (
     <VStack gap="2" alignItems="flex-start" pb="4">
       <Heading as="h3" size="sm">
-        Command to execute
+        {t("commandToExecute")}
       </Heading>
 
       <Code
@@ -126,11 +128,9 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
       {!osSupported && (
         <Alert status="error">
           <AlertIcon />
-          <AlertTitle>
-            OS/Architecture ({os.platform}-{os.arch}) not supported
-          </AlertTitle>
+          <AlertTitle>{t("osArchitectureNotSupported", { os: os.platform, arch: os.arch })}</AlertTitle>
           <AlertDescription>
-            We don't support your OS/Arch. yet. Supported OS/Arch. are: {SUPPORTED_PLATFORM_ARCHS.join(", ")}
+            {t("osArchitectureNotSupportedDescription", { supported: SUPPORTED_PLATFORM_ARCHS.join(", ") })}
           </AlertDescription>
         </Alert>
       )}
@@ -146,17 +146,17 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             setStatus("executing");
             // Check fasta index
             if (!(await hasIndexFile(fasta))) {
-              setIndexesOut((prev) => `${prev}\nFasta index not found, creating..`);
+              setIndexesOut((prev) => `${prev}\n${t("fastaIndexNotFoundCreating")}`);
               if (!(await createIndexFile(samtoolsPath, fasta))) {
-                setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
+                setIndexesOut((prev) => `${prev}\n${t("couldNotCreateIndexFileSkipping")}`);
               }
             }
             // Check files index
             for (const file of files as { path: string }[]) {
               if (!(await hasIndexFile(file.path))) {
-                setIndexesOut((prev) => `${prev}\n${file.path} index not found, creating..`);
+                setIndexesOut((prev) => `${prev}\n${file.path} ${t("indexNotFoundCreating")}`);
                 if (!(await createIndexFile(samtoolsPath, file.path))) {
-                  setIndexesOut((prev) => `${prev}\nCould not create index file, skipping`);
+                  setIndexesOut((prev) => `${prev}\n${t("couldNotCreateIndexFileSkipping")}`);
                 }
               }
             }
@@ -165,7 +165,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             await ipcRender.invoke("execute", { command: cmdStr, logToFile: true });
           }}
         >
-          Execute
+          {t("execute")}
         </Button>
         <Button
           size="sm"
@@ -185,11 +185,11 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
               await electron.fs("copyFileSync", [`${tempPath}/log.txt`, result.filePath]);
             } catch (err) {
               console.error(err);
-              alert("Failed to save log file");
+              alert(t("failedToSaveLogFile"));
             }
           }}
         >
-          Save Log
+          {t("saveLog")}
         </Button>
         <Button
           size="sm"
@@ -197,7 +197,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           isDisabled={status !== "finished"}
           onClick={async () => {
             const result: SaveDialogReturnValue = await electron.dialog("showSaveDialog", {
-              filters: [{ name: "VCF files", extensions: ["vcf.gz"] }],
+              filters: [{ name: t("vcfFiles"), extensions: ["vcf.gz"] }],
               defaultPath: "str_calls.vcf.gz",
             });
 
@@ -209,14 +209,14 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
               await electron.fs("copyFileSync", [strVcfPath, result.filePath]);
             } catch (err) {
               console.error(err);
-              alert("Failed to save VCF file");
+              alert(t("failedToSaveVcfFile"));
             }
           }}
         >
-          Save VCF
+          {t("saveVcf")}
         </Button>
         <Button size="sm" ml={2} isDisabled={status !== "finished"} onClick={onFinish}>
-          Continue
+          {t("continue")}
         </Button>
       </HStack>
     </VStack>

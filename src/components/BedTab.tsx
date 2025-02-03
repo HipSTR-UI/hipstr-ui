@@ -1,6 +1,7 @@
 import { Table, Tbody, Td, Th, Thead, Tr, useToast, VStack, Text, Button } from "@chakra-ui/react";
 import { useAtom } from "jotai";
 import { FC, useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { FileParameter } from "src/components/FileParameter";
 import { bedAtom } from "src/jotai/execute";
 
@@ -8,6 +9,7 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [bed, setBed] = useAtom(bedAtom);
   const [bedContent, setBedContent] = useState<string[]>([]);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (!bed) {
@@ -22,12 +24,12 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   return (
     <VStack alignItems="flex-start" pb="4">
       <FileParameter
-        label="BED file"
+        label={t("bedFile")}
         value={bed}
         onChange={(path) => {
           if (!/\.bed$/i.test(path)) {
             toast({
-              title: "File doesn't have .bed extension",
+              title: t("fileDoesntHaveBedExtension"),
               status: "error",
             });
             return;
@@ -35,17 +37,21 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           setBed(path);
         }}
       />
-      {bed && <Text fontWeight="bold">{bedContent.length} markers found</Text>}
+      {bed && (
+        <Text fontWeight="bold">
+          {bedContent.length} {t("markersFound")}
+        </Text>
+      )}
       {bed && (
         <Table size="sm" variant="simple" mt={4}>
           <Thead>
             <Tr>
-              <Th>Chrom.</Th>
-              <Th>Start</Th>
-              <Th>End</Th>
-              <Th>Period</Th>
-              <Th>Ref. Allele</Th>
-              <Th>Name</Th>
+              <Th>{t("chromosome")}</Th>
+              <Th>{t("start")}</Th>
+              <Th>{t("end")}</Th>
+              <Th>{t("period")}</Th>
+              <Th>{t("refAllele")}</Th>
+              <Th>{t("name")}</Th>
             </Tr>
           </Thead>
           <Tbody>
@@ -67,7 +73,7 @@ export const BedTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         </Table>
       )}
       <Button size="sm" onClick={onFinish}>
-        Continue
+        {t("continue")}
       </Button>
     </VStack>
   );

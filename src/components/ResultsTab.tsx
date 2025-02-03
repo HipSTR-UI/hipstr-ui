@@ -23,6 +23,7 @@ import { getSamplesAndMarkersMap, SampleValues } from "src/lib/vcf";
 import { getMarkersMap, Marker, parseBed } from "src/lib/bed";
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table";
 import { utils as xlsxUtils, writeFile } from "xlsx";
+import { useTranslation } from "react-i18next";
 
 export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [vcfPath, setVcfPath] = useAtom(vcfPathAtom);
@@ -32,6 +33,7 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [markerSamplesMap, setMarkerSamplesMap] = useState<{
     [sampleId: string]: { [markerId: string]: SampleValues };
   }>({});
+  const { t } = useTranslation();
 
   return (
     <VStack gap="4" alignItems="flex-start" pb="4">
@@ -41,7 +43,7 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         onChange={(path) => {
           if (!/\.vcf|\.vcf\.gz$/i.test(path)) {
             toast({
-              title: "File doesn't have .vcf.gz extension",
+              title: t("fileDoesntHaveVcfGzExtension"),
               status: "error",
             });
             return;
@@ -56,7 +58,7 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         onClick={async () => {
           if (!vcfPath) {
             toast({
-              title: "VCF file is required",
+              title: t("vcfFileIsRequired"),
               status: "error",
             });
             return;
@@ -65,7 +67,7 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             if (result !== true) {
               console.error(result);
               toast({
-                title: "Error extracting VCF file",
+                title: t("errorExtractingVcfFile"),
                 description: result.toString(),
                 status: "error",
               });
@@ -84,7 +86,7 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           setMarkerSamplesMap(result.markerSamplesMap);
         }}
       >
-        Start
+        {t("start")}
       </Button>
       {markerSamplesMap && <ResultsTable markers={markers} markerSamplesMap={markerSamplesMap} />}
     </VStack>
@@ -110,6 +112,7 @@ const ResultsTable: FC<{
   ]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const { t } = useTranslation();
 
   const { markers, data } = useMemo(() => {
     // Get unique markers
@@ -161,24 +164,24 @@ const ResultsTable: FC<{
   const columns = useMemo(() => {
     const cols: any[] = [
       {
-        header: "Sample",
+        header: t("sample"),
         accessorKey: "sample",
       },
     ];
 
     markers.forEach((marker) => {
       const subColumns = [
-        { key: "gt", header: "GT1", accessorKey: `${marker}_gt1` },
-        { key: "gt", header: "GT2", accessorKey: `${marker}_gt2` },
-        { key: "gb", header: "GB1", accessorKey: `${marker}_gb1` },
-        { key: "gb", header: "GB2", accessorKey: `${marker}_gb2` },
-        { key: "q", header: "Q", accessorKey: `${marker}_q` },
-        { key: "pq", header: "PQ", accessorKey: `${marker}_pq` },
-        { key: "ref", header: "REF", accessorKey: `${marker}_ref` },
-        { key: "period", header: "Period", accessorKey: `${marker}_period` },
-        { key: "allele1", header: "A1", accessorKey: `${marker}_allele1` },
-        { key: "allele2", header: "A2", accessorKey: `${marker}_allele2` },
-        { key: "dp", header: "DP", accessorKey: `${marker}_dp` },
+        { key: "gt", header: t("gt1"), accessorKey: `${marker}_gt1` },
+        { key: "gt", header: t("gt2"), accessorKey: `${marker}_gt2` },
+        { key: "gb", header: t("gb1"), accessorKey: `${marker}_gb1` },
+        { key: "gb", header: t("gb2"), accessorKey: `${marker}_gb2` },
+        { key: "q", header: t("q"), accessorKey: `${marker}_q` },
+        { key: "pq", header: t("pq"), accessorKey: `${marker}_pq` },
+        { key: "ref", header: t("refAllele"), accessorKey: `${marker}_ref` },
+        { key: "period", header: t("period"), accessorKey: `${marker}_period` },
+        { key: "allele1", header: t("allele1"), accessorKey: `${marker}_allele1` },
+        { key: "allele2", header: t("allele2"), accessorKey: `${marker}_allele2` },
+        { key: "dp", header: t("dp"), accessorKey: `${marker}_dp` },
       ].filter((col) => selectedColumns.includes(col.key));
 
       cols.push({
@@ -235,7 +238,7 @@ const ResultsTable: FC<{
     xlsxUtils.sheet_add_json(worksheet, [firstRow], { skipHeader: true });
     xlsxUtils.sheet_add_json(worksheet, data, { origin: 1 });
     // Replace second row with column names
-    const secondRow = ["Sample"];
+    const secondRow = [t("sample")];
     markers.forEach(() => {
       // Grab the first marker column and use the subcolumns
       columns[1].columns.forEach((col: { header: string }) => {
@@ -245,7 +248,7 @@ const ResultsTable: FC<{
     xlsxUtils.sheet_add_json(worksheet, [secondRow], { skipHeader: true, origin: "A2" });
 
     const workbook = xlsxUtils.book_new();
-    xlsxUtils.book_append_sheet(workbook, worksheet, "Results");
+    xlsxUtils.book_append_sheet(workbook, worksheet, t("results"));
     writeFile(workbook, "results.xlsx");
   };
 
@@ -254,32 +257,32 @@ const ResultsTable: FC<{
       <VStack spacing={4} alignSelf="flex-start">
         <HStack spacing={4} alignSelf="stretch">
           <Input
-            placeholder="Search by sample..."
+            placeholder={t("searchBySample")}
             value={sampleSearchTerm}
             onChange={(e) => setSampleSearchTerm(e.target.value)}
             size="sm"
           />
           <Input
-            placeholder="Search by marker..."
+            placeholder={t("searchByMarker")}
             value={markerSearchTerm}
             onChange={(e) => setMarkerSearchTerm(e.target.value)}
             size="sm"
           />
           <Button size="sm" onClick={handleExportToExcel} flexShrink={0}>
-            Export to Excel
+            {t("exportToExcel")}
           </Button>
         </HStack>
         <HStack spacing={2}>
           {[
-            { key: "gt", label: "GT" },
-            { key: "gb", label: "GB" },
-            { key: "q", label: "Q" },
-            { key: "pq", label: "PQ" },
-            { key: "ref", label: "Ref Allele" },
-            { key: "period", label: "Period" },
-            { key: "allele1", label: "Allele 1" },
-            { key: "allele2", label: "Allele 2" },
-            { key: "dp", label: "DP" },
+            { key: "gt", label: t("gt") },
+            { key: "gb", label: t("gb") },
+            { key: "q", label: t("q") },
+            { key: "pq", label: t("pq") },
+            { key: "ref", label: t("refAllele") },
+            { key: "period", label: t("period") },
+            { key: "allele1", label: t("allele1") },
+            { key: "allele2", label: t("allele2") },
+            { key: "dp", label: t("dp") },
           ].map(({ key, label }) => (
             <Checkbox
               key={key}

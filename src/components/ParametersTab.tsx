@@ -1,6 +1,7 @@
 import { Button, Checkbox, Divider, Heading, Input, Text, VStack, useToast } from "@chakra-ui/react";
 import { useAtom } from "jotai";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { FileParameter } from "src/components/FileParameter";
 import { parameters } from "src/constants/parameters";
 import { fastaAtom, paramsAtom } from "src/jotai/execute";
@@ -9,17 +10,18 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [fasta, setFasta] = useAtom(fastaAtom);
   const [params, setParams] = useAtom(paramsAtom);
+  const { t } = useTranslation();
 
   const validParameters = !!fasta;
   return (
     <VStack gap="6" alignItems="flex-start" pb="4">
       <FileParameter
-        label="Reference genome fasta"
+        label={t("referenceGenomeFasta")}
         value={fasta}
         onChange={(path) => {
           if (!/\.fasta|\.fa$/i.test(path)) {
             toast({
-              title: "File doesn't have .fasta extension",
+              title: t("fileDoesntHaveFastaExtension"),
               status: "error",
             });
             return;
@@ -29,7 +31,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
       />
 
       <Heading as="h3" size="sm">
-        Additional parameters
+        {t("additionalParameters")}
       </Heading>
 
       {parameters.map((param) => (
@@ -53,7 +55,7 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
                 {param.name}:
               </Text>{" "}
               <Text as="span" fontSize="sm" fontWeight="400">
-                {param.description}
+                {t(`${toCamelCase(param.name)}Description`)}
               </Text>
             </Checkbox>
           ) : (
@@ -61,12 +63,12 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
               <Heading as="h4" size="xs">
                 {param.name}:{" "}
                 <Text as="span" fontSize="sm" fontWeight="400">
-                  {param.description}
+                  {t(`${toCamelCase(param.name)}Description`)}
                 </Text>
               </Heading>
               <Input
                 type={param.type}
-                placeholder="Value"
+                placeholder={t("value")}
                 size="sm"
                 value={params[param.name]}
                 onChange={(e) => {
@@ -94,8 +96,12 @@ export const ParametersTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           onFinish();
         }}
       >
-        Continue
+        {t("continue")}
       </Button>
     </VStack>
   );
 };
+
+function toCamelCase(str: string) {
+  return str.replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+}

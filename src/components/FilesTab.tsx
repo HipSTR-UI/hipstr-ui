@@ -16,6 +16,7 @@ import {
 import { OpenDialogReturnValue } from "electron";
 import { useAtom } from "jotai";
 import { FC } from "react";
+import { useTranslation } from "react-i18next";
 import { filesAtom } from "src/jotai/execute";
 import { formatFileSize } from "src/lib/file";
 
@@ -37,19 +38,20 @@ async function getFilesFromPath(path: string) {
 export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [files, setFiles] = useAtom(filesAtom);
+  const { t } = useTranslation();
 
   return (
     <VStack gap="2" alignItems="flex-start" pb="4">
       <Heading as="h3" size="sm">
-        Input files
+        {t("inputFiles")}
       </Heading>
       <HStack>
         <Button
           size="sm"
           onClick={async () => {
             const dialogConfig = {
-              title: "Select files or folder",
-              buttonLabel: "Select",
+              title: t("selectFilesOrFolder"),
+              buttonLabel: t("select"),
               properties: ["openFile", "multiSelections", "openDirectory"],
             };
             const result = (await electron.dialog("showOpenDialog", dialogConfig)) as OpenDialogReturnValue;
@@ -67,7 +69,7 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             fileList = fileList.filter((file) => /\.(bam|cram)$/i.test(file.path));
             if (fileList.length < 1) {
               toast({
-                title: "No files with bam/cram extension found",
+                title: t("noFilesWithBamCramExtensionFound"),
                 status: "error",
               });
               return;
@@ -75,16 +77,20 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             setFiles(fileList);
           }}
         >
-          Select files/folder
+          {t("selectFilesOrFolder")}
         </Button>
       </HStack>
 
-      {files?.length > 0 && <Text fontWeight="bold">{files?.length} files selected</Text>}
+      {files?.length > 0 && (
+        <Text fontWeight="bold">
+          {files?.length} {t("filesSelected")}
+        </Text>
+      )}
       <Table size="sm" variant="simple">
         <Thead>
           <Tr>
-            <Th>File Path</Th>
-            <Th>Size</Th>
+            <Th>{t("filePath")}</Th>
+            <Th>{t("size")}</Th>
           </Tr>
         </Thead>
         <Tbody>
@@ -107,7 +113,7 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
           onFinish();
         }}
       >
-        Continue
+        {t("continue")}
       </Button>
     </VStack>
   );

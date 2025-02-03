@@ -1,7 +1,7 @@
 {
   "name": "hipstr-ui",
   "productName": "hipstr-ui",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "HipSTR software UI",
   "main": ".vite/build/main.js",
   "scripts": {
@@ -47,11 +47,14 @@
     "@tanstack/react-table": "^8.20.6",
     "electron-squirrel-startup": "^1.0.0",
     "framer-motion": "^11.0.25",
+    "i18next": "^24.2.2",
+    "i18next-browser-languagedetector": "^8.0.2",
     "jotai": "^2.7.2",
     "lucide-react": "^0.474.0",
     "node-7z": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-i18next": "^15.4.0",
     "xlsx": "^0.18.5"
   },
   "optionalDependencies": {
