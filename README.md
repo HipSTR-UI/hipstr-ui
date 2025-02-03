@@ -9,7 +9,10 @@ Comes with a pre-built HipSTR binary for Windows, macOS, and Linux.
 
 Built with Electron and Chakra UI.
 
+Download the latest release for your operating system from the [Releases](https://github.com/jayala/hipstr-ui/releases) page.
+
 To run in MacOS, you need to open a Terminal and run:
-1. `cd ~/Downloads` to go to the Downloads folder.
-2. `xattr -c hipstr-ui.app` to remove the quarantine attribute.
-3. `open hipstr-ui.app` to open the app (You can also do this by double-clicking the file in Finder).
+1. Extract the zip file if you haven't already.
+2. `cd ~/Downloads` to go to the Downloads folder.
+3. `xattr -c hipstr-ui.app` to remove the quarantine attribute.
+4. `open hipstr-ui.app` to open the app (You can also do this by double-clicking the file in Finder).
