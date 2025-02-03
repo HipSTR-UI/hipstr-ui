@@ -37,7 +37,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const tempPath = useGetPath("temp");
   const pathSep = usePathSeparator();
   const setVcfPath = useSetAtom(vcfPathAtom);
-  const strVcfPath = `${tempPath}/str_calls.vcf.gz`;
+  const strVcfPath = `${tempPath}${pathSep}str_calls.vcf.gz`;
 
   useEffect(() => {
     if (!strVcfPath) {

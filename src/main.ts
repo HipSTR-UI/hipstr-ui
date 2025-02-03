@@ -5,6 +5,7 @@ import process from "process";
 import child_process from "child_process";
 import fs from "node:fs";
 import { GetPathName } from "src/types/getPath";
+import { joinPath } from "./lib/path";
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -139,9 +140,16 @@ ipcMain.handle("os", (event: IpcMainInvokeEvent, method: string, param: any) => 
   return os[method](param);
 });
 
-ipcMain.handle("process", (event: IpcMainInvokeEvent, attribute: string) => {
-  if (attribute === "resourcesPath" && __filename.indexOf("app.asar") === -1) {
+function getResourcesPath() {
+  if (__filename.indexOf("app.asar") === -1) {
     return ".";
+  }
+  return process.resourcesPath;
+}
+
+ipcMain.handle("process", (event: IpcMainInvokeEvent, attribute: string) => {
+  if (attribute === "resourcesPath") {
+    return getResourcesPath();
   }
   // eslint-disable-next-line @typescript-eslint/ban-ts-comment
   // @ts-ignore
@@ -161,9 +169,22 @@ ipcMain.handle("getPath", (event: IpcMainInvokeEvent, name: GetPathName) => {
   return app.getPath(name);
 });
 
-ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, path: string) => {
+ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, filePath: string) => {
   try {
-    await child_process.execSync(`gunzip -fdk ${path}`).toString();
+    if (process.platform === 'win32') {
+      const Seven = require('node-7z');
+      const stream = Seven.extractFull(filePath, filePath.substring(0, filePath.lastIndexOf('\\')), {
+        $bin: joinPath(path.sep, getResourcesPath(), 'binaries', '7zip-binaries', 'bin', 'win32', os.arch(), '7za.exe'),
+      });
+
+
+      await new Promise((resolve, reject) => {
+        stream.on('end', resolve);
+        stream.on('error', reject); 
+      });
+    } else {
+      await child_process.execSync(`gunzip -fdk ${filePath}`).toString();
+    }
     return true;
   } catch (error) {
     console.error(error);

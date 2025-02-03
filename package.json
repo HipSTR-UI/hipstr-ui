@@ -49,6 +49,7 @@
     "framer-motion": "^11.0.25",
     "jotai": "^2.7.2",
     "lucide-react": "^0.474.0",
+    "node-7z": "^3.0.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "xlsx": "^0.18.5"
