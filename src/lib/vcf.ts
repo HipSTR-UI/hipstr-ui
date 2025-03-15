@@ -8,6 +8,9 @@ export type SampleValues = {
   dp: string;
   allele1: number;
   allele2: number;
+  ref: string;
+  seq1: string;
+  seq2: string;
 };
 
 export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [markerId: string]: Marker }) {
@@ -31,6 +34,7 @@ export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [marke
       continue;
     }
     const [chrom, pos, id, ref, alt, qual, filter, info, format, ...values] = line.split("\t");
+    const altList = alt.split(",");
     values.forEach((sampleValues, index) => {
       if (!sampleValues) {
         return;
@@ -42,6 +46,12 @@ export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [marke
       const [bp1, bp2] = gb ? gb.split("|") : [];
       const allele1 = gb ? markersMap[id].refAllele + parseInt(bp1, 10) / markersMap[id].period : null;
       const allele2 = gb ? markersMap[id].refAllele + parseInt(bp2, 10) / markersMap[id].period : null;
+      const [gt1, gt2] = gt
+        .split("|")
+        .map((val) => parseInt(val, 10))
+        .slice(0, 2);
+      const seq1 = gt1 === 0 ? ref : altList[gt1 - 1];
+      const seq2 = gt2 === 0 ? ref : altList[gt2 - 1];
       markerSamplesMap[samples[index]][id] = {
         gt,
         gb,
@@ -50,6 +60,9 @@ export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [marke
         dp,
         allele1,
         allele2,
+        ref,
+        seq1,
+        seq2,
       };
     });
   }

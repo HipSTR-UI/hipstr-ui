@@ -10,6 +10,7 @@ import { theme } from "src/lib/theme";
 import { useTranslation } from "react-i18next";
 import { useInitI18n } from "./i18n";
 import { LanguageToggle } from "src/components/LanguageToggle";
+import { IsoallelesTab } from "src/components/IsoallelesTab";
 
 export default function App() {
   const { initialized } = useInitI18n();
@@ -41,6 +42,7 @@ const AppComponent = () => {
           <Tab>{t("parameters")}</Tab>
           <Tab>{t("execution")}</Tab>
           <Tab>{t("results")}</Tab>
+          <Tab>{t("isoalleles")}</Tab>
         </TabList>
 
         <TabPanels flexGrow={1} overflowY="auto" display="flex">
@@ -58,6 +60,9 @@ const AppComponent = () => {
           </TabPanel>
           <TabPanel flexGrow={1}>
             <ResultsTab onFinish={() => {}} />
+          </TabPanel>
+          <TabPanel flexGrow={1}>
+            <IsoallelesTab onFinish={() => {}} />
           </TabPanel>
         </TabPanels>
       </Tabs>
