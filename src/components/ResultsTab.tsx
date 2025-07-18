@@ -83,6 +83,9 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             { encoding: "utf8", flag: "r" },
           ]);
           const result = getSamplesAndMarkersMap(vcfContent, markersMap);
+          if (!result) {
+            return;
+          }
           setMarkerSamplesMap(result.markerSamplesMap);
         }}
       >

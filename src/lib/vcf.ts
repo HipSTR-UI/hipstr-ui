@@ -23,13 +23,30 @@ export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [marke
   let samples: string[] = [];
 
   try {
+    let vcfMarkers = [];
+    let isAfterChrom = false;
     for (const line of lines) {
       if (line.startsWith("#CHROM")) {
         samples = line.split("\t").slice(9);
         samples.forEach((sample) => {
           markerSamplesMap[sample] = {};
         });
+        isAfterChrom = true;
+      } else if (isAfterChrom) {
+        vcfMarkers.push(line.split("\t")[2]);
       }
+    }
+
+    const areResultMarkersSameAsBed = vcfMarkers.length === Object.keys(markersMap).length;
+    if (
+      !areResultMarkersSameAsBed &&
+      !confirm(
+        `The result file markers are not the same as the bed file.\nBED: ${Object.keys(markersMap).length}\nVCF: ${
+          vcfMarkers.length
+        }\n\nDo you want to continue?`
+      )
+    ) {
+      return null;
     }
 
     for (const line of lines) {
@@ -39,7 +56,7 @@ export function getSamplesAndMarkersMap(vcfContent: string, markersMap: { [marke
 
       try {
         const [chrom, pos, id, ref, alt, qual, filter, info, format, ...values] = line.split("\t");
-        const altList = alt.split(",");
+        const altList = alt?.split(",");
 
         values.forEach((sampleValues, index) => {
           if (!sampleValues) {
