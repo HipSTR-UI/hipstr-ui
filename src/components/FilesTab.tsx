@@ -19,6 +19,7 @@ import { FC } from "react";
 import { useTranslation } from "react-i18next";
 import { filesAtom } from "src/jotai/execute";
 import { formatFileSize } from "src/lib/file";
+import { useSentry } from "src/hooks/useSentry";
 
 async function getFilesFromPath(path: string) {
   let result: string[] = [];
@@ -39,6 +40,7 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const toast = useToast();
   const [files, setFiles] = useAtom(filesAtom);
   const { t } = useTranslation();
+  const { captureError, setTag } = useSentry();
 
   return (
     <VStack gap="2" alignItems="flex-start" pb="4">
@@ -49,32 +51,45 @@ export const FilesTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
         <Button
           size="sm"
           onClick={async () => {
-            const dialogConfig = {
-              title: t("selectFilesOrFolder"),
-              buttonLabel: t("select"),
-              properties: ["openFile", "multiSelections", "openDirectory"],
-            };
-            const result = (await electron.dialog("showOpenDialog", dialogConfig)) as OpenDialogReturnValue;
-            if (result.canceled) {
-              return;
-            }
-            let fileList: { path: string; size: number }[] = [];
-            for (const filePath of result.filePaths) {
-              for (const file of await getFilesFromPath(filePath)) {
-                const stats = await electron.fs("statSync", [file]);
-                fileList.push({ path: file, size: stats.size });
+            try {
+              setTag("action", "file-selection");
+
+              const dialogConfig = {
+                title: t("selectFilesOrFolder"),
+                buttonLabel: t("select"),
+                properties: ["openFile", "multiSelections", "openDirectory"],
+              };
+              const result = (await electron.dialog("showOpenDialog", dialogConfig)) as OpenDialogReturnValue;
+              if (result.canceled) {
+                return;
               }
-            }
-            // filter for valid files
-            fileList = fileList.filter((file) => /\.(bam|cram)$/i.test(file.path));
-            if (fileList.length < 1) {
+              let fileList: { path: string; size: number }[] = [];
+              for (const filePath of result.filePaths) {
+                for (const file of await getFilesFromPath(filePath)) {
+                  const stats = await electron.fs("statSync", [file]);
+                  fileList.push({ path: file, size: stats.size });
+                }
+              }
+              // filter for valid files
+              fileList = fileList.filter((file) => /\.(bam|cram)$/i.test(file.path));
+              if (fileList.length < 1) {
+                toast({
+                  title: t("noFilesWithBamCramExtensionFound"),
+                  status: "error",
+                });
+                return;
+              }
+              setFiles(fileList);
+            } catch (error) {
+              captureError(error as Error, {
+                component: "FilesTab",
+                action: "file-selection",
+              });
               toast({
-                title: t("noFilesWithBamCramExtensionFound"),
+                title: t("errorSelectingFiles"),
                 status: "error",
               });
-              return;
             }
-            setFiles(fileList);
           }}
         >
           {t("selectFilesOrFolder")}

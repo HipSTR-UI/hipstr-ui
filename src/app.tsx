@@ -11,11 +11,16 @@ import { useTranslation } from "react-i18next";
 import { useInitI18n } from "./i18n";
 import { LanguageToggle } from "src/components/LanguageToggle";
 import { IsoallelesTab } from "src/components/IsoallelesTab";
+import ErrorBoundary from "src/components/ErrorBoundary";
 
 export default function App() {
   const { initialized } = useInitI18n();
   if (!initialized) return null;
-  return <AppComponent />;
+  return (
+    <ErrorBoundary>
+      <AppComponent />
+    </ErrorBoundary>
+  );
 }
 
 const AppComponent = () => {

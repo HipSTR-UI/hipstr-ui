@@ -29,6 +29,14 @@
 import "./index.css";
 import { createRoot } from "react-dom/client";
 import App from "./app";
+import { initSentryRenderer } from "./lib/sentry-renderer";
+import { setupGlobalErrorHandlers } from "./lib/globalErrorHandler";
+
+// Initialize Sentry for renderer process
+initSentryRenderer();
+
+// Setup global error handlers
+setupGlobalErrorHandlers();
 
 const container = document.getElementById("root") as HTMLElement;
 const root = createRoot(container);

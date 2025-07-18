@@ -45,7 +45,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
     if (!strVcfPath) {
       return;
     }
-    ipcRender.receive("main-to-render", (result: string | { exitCode: number }) => {
+    electron.on("main-to-render", (result: string | { exitCode: number }) => {
       if (typeof result === "string") {
         setCmdOut((prev) => `${prev}\n${result}`);
         setTimeout(() => {
@@ -162,7 +162,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             }
             setCmdOut((prev) => `${prev ? "\n" : ""}${cmdStr}`);
             // Execute HipSTR
-            await ipcRender.invoke("execute", { command: cmdStr, logToFile: true });
+            await electron.invoke("execute", { command: cmdStr, logToFile: true });
           }}
         >
           {t("execute")}

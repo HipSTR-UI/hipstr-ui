@@ -6,6 +6,14 @@ import child_process from "child_process";
 import fs from "node:fs";
 import { GetPathName } from "src/types/getPath";
 import { joinPath } from "./lib/path";
+import { initSentryMain, captureErrorMain, flushSentryMain } from "./lib/sentry-main";
+import { setupMainProcessErrorHandlers } from "./lib/globalErrorHandler";
+
+// Initialize Sentry for main process
+initSentryMain();
+
+// Setup global error handlers for main process
+setupMainProcessErrorHandlers();
 
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (require("electron-squirrel-startup")) {
@@ -30,9 +38,7 @@ const createWindow = () => {
     // Open the DevTools only in development mode
     mainWindow.webContents.openDevTools();
   } else {
-    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`)).then(() => {
-      mainWindow.webContents.send("main-to-render", "Ping 1 (send from main process)");
-    });
+    mainWindow.loadFile(path.join(__dirname, `../renderer/${MAIN_WINDOW_VITE_NAME}/index.html`));
   }
 };
 
@@ -44,7 +50,10 @@ app.on("ready", createWindow);
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
-app.on("window-all-closed", () => {
+app.on("window-all-closed", async () => {
+  // Flush Sentry events before quitting
+  await flushSentryMain();
+
   if (process.platform !== "darwin") {
     app.quit();
   }
@@ -171,16 +180,15 @@ ipcMain.handle("getPath", (event: IpcMainInvokeEvent, name: GetPathName) => {
 
 ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, filePath: string) => {
   try {
-    if (process.platform === 'win32') {
-      const Seven = require('node-7z');
-      const stream = Seven.extractFull(filePath, filePath.substring(0, filePath.lastIndexOf('\\')), {
-        $bin: joinPath(path.sep, getResourcesPath(), 'binaries', '7zip-binaries', 'bin', 'win32', os.arch(), '7za.exe'),
+    if (process.platform === "win32") {
+      const Seven = require("node-7z");
+      const stream = Seven.extractFull(filePath, filePath.substring(0, filePath.lastIndexOf("\\")), {
+        $bin: joinPath(path.sep, getResourcesPath(), "binaries", "7zip-binaries", "bin", "win32", os.arch(), "7za.exe"),
       });
 
-
       await new Promise((resolve, reject) => {
-        stream.on('end', resolve);
-        stream.on('error', reject); 
+        stream.on("end", resolve);
+        stream.on("error", reject);
       });
     } else {
       await child_process.execSync(`gunzip -fdk ${filePath}`).toString();
@@ -188,6 +196,15 @@ ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, filePath: string) 
     return true;
   } catch (error) {
     console.error(error);
+    // Capture error in Sentry
+    captureErrorMain(error as Error, { filePath, platform: process.platform });
     return error;
   }
+});
+
+ipcMain.handle("appInfo", (event: IpcMainInvokeEvent) => {
+  return {
+    version: app.getVersion(),
+    env: MAIN_WINDOW_VITE_DEV_SERVER_URL ? "development" : "production",
+  };
 });
