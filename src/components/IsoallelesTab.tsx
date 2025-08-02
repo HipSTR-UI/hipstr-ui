@@ -147,8 +147,9 @@ const ResultsTable: FC<{
       const mk = Object.values(markersFromProps).find((m) => m.name === marker);
       const values = markerValues[marker];
       if (
-        (markerValues[marker].seq1 === values.ref || markerValues[marker].allele1 !== mk?.refAllele) &&
-        (markerValues[marker].seq2 === values.ref || markerValues[marker].allele2 !== mk?.refAllele)
+        !markerValues[marker] ||
+        ((markerValues[marker].seq1 === values.ref || markerValues[marker].allele1 !== mk?.refAllele) &&
+          (markerValues[marker].seq2 === values.ref || markerValues[marker].allele2 !== mk?.refAllele))
       ) {
         return;
       }
