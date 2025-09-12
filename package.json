@@ -10,7 +10,8 @@
     "make": "electron-forge make",
     "publish": "electron-forge publish",
     "lint": "eslint --ext .ts,.tsx .",
-    "sign-macos": "ts-node sign-macos.ts"
+    "sign-macos": "ts-node sign-macos.ts",
+    "bump": "ts-node version.ts"
   },
   "devDependencies": {
     "@electron-forge/cli": "^7.3.1",
