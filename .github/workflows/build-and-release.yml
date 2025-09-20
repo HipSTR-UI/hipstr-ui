@@ -59,6 +59,99 @@ jobs:
       - name: Build installers with Electron Forge (skip signing)
         run: npm run make
 
+      - name: Record maker zip path (macOS)
+        if: matrix.os == 'macos-latest'
+        shell: bash
+        run: |
+          ORIG_ZIP=$(ls out/make/zip/darwin/*.zip 2>/dev/null | head -n1 || true)
+          echo "ORIG_ZIP=$ORIG_ZIP" >> "$GITHUB_ENV"
+
+      - name: Set up macOS signing keychain
+        if: matrix.os == 'macos-latest'
+        env:
+          CERT_P12_BASE64: ${{ secrets.MACOS_CERT_P12_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.MACOS_KEYCHAIN_PASSWORD }}
+        run: |
+          CERT_PATH="$RUNNER_TEMP/cert.p12"
+          KEYCHAIN_PATH="$RUNNER_TEMP/build.keychain-db"
+          echo "$CERT_P12_BASE64" | base64 --decode > "$CERT_PATH"
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$CERT_PATH" -k "$KEYCHAIN_PATH" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security list-keychains -d user -s "$KEYCHAIN_PATH"
+          security default-keychain -s "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          rm -f "$CERT_PATH"
+          echo "KEYCHAIN_PATH=$KEYCHAIN_PATH" >> "$GITHUB_ENV"
+
+      - name: Sign macOS app
+        if: matrix.os == 'macos-latest'
+        env:
+          APPLE_DEVELOPER_IDENTITY: ${{ secrets.APPLE_DEVELOPER_IDENTITY }}
+          ENTITLEMENTS_PATH: ${{ github.workspace }}/entitlements.plist
+          ENTITLEMENTS_INHERIT_PATH: ${{ github.workspace }}/entitlements.inherit.plist
+        run: npm run sign-macos
+
+      - name: Verify signature (macOS)
+        if: matrix.os == 'macos-latest'
+        run: |
+          codesign --verify --deep --strict --verbose=2 out/hipstr-ui-darwin-arm64/hipstr-ui.app
+          spctl -a -vvv -t install out/hipstr-ui-darwin-arm64/hipstr-ui.app || true
+
+      - name: Create zip for notarization
+        if: matrix.os == 'macos-latest'
+        run: |
+          NOTARIZE_ZIP="$RUNNER_TEMP/app-for-notarization.zip"
+          ditto -c -k --sequesterRsrc --keepParent out/hipstr-ui-darwin-arm64/hipstr-ui.app "$NOTARIZE_ZIP"
+          echo "NOTARIZE_ZIP=$NOTARIZE_ZIP" >> "$GITHUB_ENV"
+
+      - name: Prepare notarytool key
+        if: matrix.os == 'macos-latest'
+        env:
+          AC_API_KEY_P8_BASE64: ${{ secrets.NOTARY_API_KEY_P8_BASE64 }}
+        run: |
+          NOTARY_KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          echo "$AC_API_KEY_P8_BASE64" | base64 --decode > "$NOTARY_KEY_PATH"
+          chmod 600 "$NOTARY_KEY_PATH"
+          echo "NOTARY_KEY_PATH=$NOTARY_KEY_PATH" >> "$GITHUB_ENV"
+
+      - name: Notarize app (notarytool)
+        if: matrix.os == 'macos-latest'
+        env:
+          AC_API_KEY_ID: ${{ secrets.NOTARY_API_KEY_ID }}
+          AC_API_ISSUER_ID: ${{ secrets.NOTARY_API_ISSUER_ID }}
+        run: |
+          xcrun notarytool submit "$NOTARIZE_ZIP" \
+            --key "$NOTARY_KEY_PATH" \
+            --key-id "$AC_API_KEY_ID" \
+            --issuer "$AC_API_ISSUER_ID" \
+            --wait
+
+      - name: Staple notarization ticket
+        if: matrix.os == 'macos-latest'
+        run: |
+          xcrun stapler staple out/hipstr-ui-darwin-arm64/hipstr-ui.app
+          spctl -a -vvv -t install out/hipstr-ui-darwin-arm64/hipstr-ui.app || true
+
+      - name: Re-zip stapled app (overwrite Maker ZIP)
+        if: matrix.os == 'macos-latest'
+        run: |
+          if [ -z "$ORIG_ZIP" ] || [ ! -f "$ORIG_ZIP" ]; then
+            mkdir -p out/make/zip/darwin
+            ORIG_ZIP="out/make/zip/darwin/hipstr-ui-darwin-arm64-${{ needs.version.outputs.version }}.zip"
+          fi
+          rm -f "$ORIG_ZIP"
+          ditto -c -k --sequesterRsrc --keepParent out/hipstr-ui-darwin-arm64/hipstr-ui.app "$ORIG_ZIP"
+
+      - name: Cleanup temporary keychain
+        if: matrix.os == 'macos-latest'
+        run: |
+          if [ -n "$KEYCHAIN_PATH" ] && [ -f "$KEYCHAIN_PATH" ]; then
+            security delete-keychain "$KEYCHAIN_PATH" || true
+          fi
+
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
