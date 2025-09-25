@@ -159,7 +159,6 @@ jobs:
           if-no-files-found: warn
           path: |
             out/make/**/*.zip
-            out/**/*.zip
             out/make/**/*.exe
             out/make/**/*.nupkg
             out/make/**/RELEASES
