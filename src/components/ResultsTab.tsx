@@ -117,6 +117,24 @@ const ResultsTable: FC<{
   const [pageSize, setPageSize] = useState(10);
   const { t } = useTranslation();
 
+  // Rewrites specific allele fractional parts at display/export time
+  const rewriteAlleleDecimal = (val: number | null | undefined) => {
+    if (val === null || val === undefined) return val as any;
+    const integerPart = Math.floor(val);
+    const fractionalPart = val - integerPart;
+    const approx = (a: number, b: number) => Math.abs(a - b) < 1e-6;
+
+    let newFraction = fractionalPart;
+    if (approx(fractionalPart, 0.75) || approx(fractionalPart, 0.35)) {
+      newFraction = 0.3;
+    } else if (approx(fractionalPart, 0.25) || approx(fractionalPart, 0.5)) {
+      newFraction = 0.2;
+    }
+
+    const rewritten = integerPart + newFraction;
+    return newFraction === 0.2 || newFraction === 0.3 ? parseFloat(rewritten.toFixed(1)) : rewritten;
+  };
+
   const { markers, data } = useMemo(() => {
     // Get unique markers
     const markerSet = new Set<string>();
@@ -154,8 +172,8 @@ const ResultsTable: FC<{
           const mk = Object.values(markersFromProps).find((m) => m.name === marker);
           if (selectedColumns.includes("ref")) row[`${marker}_ref`] = mk?.refAllele;
           if (selectedColumns.includes("period")) row[`${marker}_period`] = mk?.period;
-          if (selectedColumns.includes("allele1")) row[`${marker}_allele1`] = values.allele1;
-          if (selectedColumns.includes("allele2")) row[`${marker}_allele2`] = values.allele2;
+          if (selectedColumns.includes("allele1")) row[`${marker}_allele1`] = rewriteAlleleDecimal(values.allele1);
+          if (selectedColumns.includes("allele2")) row[`${marker}_allele2`] = rewriteAlleleDecimal(values.allele2);
           if (selectedColumns.includes("dp")) row[`${marker}_dp`] = values.dp;
         }
       });
