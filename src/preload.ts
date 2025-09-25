@@ -17,8 +17,11 @@ const electronHandler = {
   getPath: (name: GetPathName) => ipcRenderer.invoke("getPath", name),
   extractGz: (path: string) => ipcRenderer.invoke("extractGz", path),
   appInfo: () => ipcRenderer.invoke("appInfo"),
-  on: (channel: string, listener: (...args: any[]) => void) =>
-    ipcRenderer.on(channel, (event, ...args) => listener(...args)),
+  on: (channel: string, listener: (...args: any[]) => void) => {
+    const subscription = (_event: Electron.IpcRendererEvent, ...args: any[]) => listener(...args);
+    ipcRenderer.on(channel, subscription);
+    return () => ipcRenderer.removeListener(channel, subscription);
+  },
   invoke: (method: string, params: any[]) => ipcRenderer.invoke(method, params),
 };
 

@@ -1,18 +1,22 @@
 import { atom } from "jotai";
 
-export const atomWithLocalStorage = (key: string, initialValue: string | object) => {
-  const getInitialValue = () => {
+export const atomWithLocalStorage = <T>(key: string, initialValue: T) => {
+  const getInitialValue = (): T => {
     const item = localStorage.getItem(key);
     if (item !== null) {
-      return JSON.parse(item);
+      try {
+        return JSON.parse(item) as T;
+      } catch (_) {
+        return initialValue;
+      }
     }
     return initialValue;
   };
-  const baseAtom = atom(getInitialValue());
+  const baseAtom = atom<T>(getInitialValue());
   const derivedAtom = atom(
     (get) => get(baseAtom),
-    (get, set, update) => {
-      const nextValue = typeof update === "function" ? update(get(baseAtom)) : update;
+    (get, set, update: T | ((prev: T) => T)) => {
+      const nextValue = typeof update === "function" ? (update as (prev: T) => T)(get(baseAtom)) : update;
       set(baseAtom, nextValue);
       localStorage.setItem(key, JSON.stringify(nextValue));
     }

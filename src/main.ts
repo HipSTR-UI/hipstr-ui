@@ -1,4 +1,4 @@
-import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent } from "electron";
+import { app, BrowserWindow, ipcMain, dialog, IpcMainInvokeEvent, globalShortcut } from "electron";
 import path from "path";
 import os from "os";
 import process from "process";
@@ -45,7 +45,16 @@ const createWindow = () => {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on("ready", createWindow);
+app.on("ready", () => {
+  createWindow();
+  // Register hidden menu toggle shortcut
+  const acceleratorDarwin = "CommandOrControl+Shift+K"; // Cmd+Shift+K (mac) or Ctrl+Shift+K (win/linux)
+  globalShortcut.register(acceleratorDarwin, () => {
+    if (mainWindow && !mainWindow.isDestroyed()) {
+      mainWindow.webContents.send("toggle-hidden-menu");
+    }
+  });
+});
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
@@ -65,6 +74,10 @@ app.on("activate", () => {
   if (BrowserWindow.getAllWindows().length === 0) {
     createWindow();
   }
+});
+
+app.on("will-quit", () => {
+  globalShortcut.unregisterAll();
 });
 
 // In this file you can include the rest of your app's specific main process

@@ -1,5 +1,17 @@
-import { ChakraProvider, Tabs, TabList, TabPanels, Tab, TabPanel, Image, Link, HStack, Text } from "@chakra-ui/react";
-import { useState } from "react";
+import {
+  ChakraProvider,
+  Tabs,
+  TabList,
+  TabPanels,
+  Tab,
+  TabPanel,
+  Image,
+  Link,
+  HStack,
+  Text,
+  useDisclosure,
+} from "@chakra-ui/react";
+import { useEffect, useState } from "react";
 import { BedTab } from "src/components/BedTab";
 import { ExecutionTab } from "src/components/ExecutionTab";
 import { FilesTab } from "src/components/FilesTab";
@@ -11,6 +23,9 @@ import { useTranslation } from "react-i18next";
 import { useInitI18n } from "./i18n";
 import { LanguageToggle } from "src/components/LanguageToggle";
 import { IsoallelesTab } from "src/components/IsoallelesTab";
+import { useAtom } from "jotai";
+import { showIsoallelesTabAtom } from "src/jotai/execute";
+import { DeveloperOptionsModal } from "src/components/DeveloperOptionsModal";
 import ErrorBoundary from "src/components/ErrorBoundary";
 
 export default function App() {
@@ -26,6 +41,22 @@ export default function App() {
 const AppComponent = () => {
   const [tabIndex, setTabIndex] = useState(0);
   const { t } = useTranslation();
+  const [showIsoallelesTab, setShowIsoallelesTab] = useAtom(showIsoallelesTabAtom);
+  const { isOpen, onOpen, onClose } = useDisclosure();
+
+  useEffect(() => {
+    const off = electron.on("toggle-hidden-menu", () => onOpen());
+    return () => {
+      // @ts-ignore electron.on returns an unsubscribe when our preload wraps it, else noop
+      off?.();
+    };
+  }, [onOpen]);
+
+  useEffect(() => {
+    if (!showIsoallelesTab && tabIndex === 5) {
+      setTabIndex(4);
+    }
+  }, [showIsoallelesTab, tabIndex]);
 
   return (
     <ChakraProvider theme={theme}>
@@ -47,7 +78,7 @@ const AppComponent = () => {
           <Tab>{t("parameters")}</Tab>
           <Tab>{t("execution")}</Tab>
           <Tab>{t("results")}</Tab>
-          <Tab>{t("isoalleles")}</Tab>
+          {showIsoallelesTab && <Tab>{t("isoalleles")}</Tab>}
         </TabList>
 
         <TabPanels flexGrow={1} overflowY="auto" display="flex">
@@ -66,11 +97,19 @@ const AppComponent = () => {
           <TabPanel flexGrow={1}>
             <ResultsTab onFinish={() => {}} />
           </TabPanel>
-          <TabPanel flexGrow={1}>
-            <IsoallelesTab onFinish={() => {}} />
-          </TabPanel>
+          {showIsoallelesTab && (
+            <TabPanel flexGrow={1}>
+              <IsoallelesTab onFinish={() => {}} />
+            </TabPanel>
+          )}
         </TabPanels>
       </Tabs>
+      <DeveloperOptionsModal
+        isOpen={isOpen}
+        onClose={onClose}
+        showIsoallelesTab={showIsoallelesTab}
+        onToggleIsoalleles={(checked) => setShowIsoallelesTab(checked)}
+      />
       <HStack id="footer" bg="gray.100" px="4" py="2" justifyContent="center">
         <Link href="https://github.com/tfwillems/HipSTR" target="_blank" fontSize="small">
           GitHub

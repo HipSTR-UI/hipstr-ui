@@ -8,3 +8,6 @@ export const fastaAtom = atomWithLocalStorage("fasta", "");
 export const bedAtom = atomWithLocalStorage("bed", "");
 export const paramsAtom = atomWithLocalStorage("params", {});
 export const vcfPathAtom = atomWithLocalStorage("vcfPath", "");
+
+// Controls visibility of Isoalleles tab (default hidden)
+export const showIsoallelesTabAtom = atomWithLocalStorage<boolean>("showIsoallelesTab", false);
