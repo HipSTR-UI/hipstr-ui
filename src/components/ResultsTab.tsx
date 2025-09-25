@@ -18,7 +18,7 @@ import {
 import { FC, useMemo, useState } from "react";
 import { FileParameter } from "src/components/FileParameter";
 import { useAtom } from "jotai";
-import { bedAtom, vcfPathAtom } from "src/jotai/execute";
+import { bedAtom, vcfPathAtom, resultsMarkersAtom, markerSamplesMapAtom } from "src/jotai/execute";
 import { getSamplesAndMarkersMap, SampleValues } from "src/lib/vcf";
 import { getMarkersMap, Marker, parseBed } from "src/lib/bed";
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table";
@@ -29,10 +29,8 @@ export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [vcfPath, setVcfPath] = useAtom(vcfPathAtom);
   const [bedPath] = useAtom(bedAtom);
   const toast = useToast();
-  const [markers, setMarkers] = useState<Marker[]>([]);
-  const [markerSamplesMap, setMarkerSamplesMap] = useState<{
-    [sampleId: string]: { [markerId: string]: SampleValues };
-  }>({});
+  const [markers, setMarkers] = useAtom(resultsMarkersAtom);
+  const [markerSamplesMap, setMarkerSamplesMap] = useAtom(markerSamplesMapAtom);
   const { t } = useTranslation();
 
   return (

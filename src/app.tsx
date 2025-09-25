@@ -23,6 +23,7 @@ import { useTranslation } from "react-i18next";
 import { useInitI18n } from "./i18n";
 import { LanguageToggle } from "src/components/LanguageToggle";
 import { IsoallelesTab } from "src/components/IsoallelesTab";
+import { VisualizeTab } from "src/components/VisualizeTab";
 import { useAtom } from "jotai";
 import { showIsoallelesTabAtom } from "src/jotai/execute";
 import { DeveloperOptionsModal } from "src/components/DeveloperOptionsModal";
@@ -53,7 +54,7 @@ const AppComponent = () => {
   }, [onOpen]);
 
   useEffect(() => {
-    if (!showIsoallelesTab && tabIndex === 5) {
+    if (!showIsoallelesTab && tabIndex === 6) {
       setTabIndex(4);
     }
   }, [showIsoallelesTab, tabIndex]);
@@ -78,6 +79,7 @@ const AppComponent = () => {
           <Tab>{t("parameters")}</Tab>
           <Tab>{t("execution")}</Tab>
           <Tab>{t("results")}</Tab>
+          <Tab>{t("visualize")}</Tab>
           {showIsoallelesTab && <Tab>{t("isoalleles")}</Tab>}
         </TabList>
 
@@ -96,6 +98,9 @@ const AppComponent = () => {
           </TabPanel>
           <TabPanel flexGrow={1}>
             <ResultsTab onFinish={() => {}} />
+          </TabPanel>
+          <TabPanel flexGrow={1}>
+            <VisualizeTab onFinish={() => {}} />
           </TabPanel>
           {showIsoallelesTab && (
             <TabPanel flexGrow={1}>
