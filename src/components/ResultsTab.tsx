@@ -14,6 +14,8 @@ import {
   Checkbox,
   Select,
   Text,
+  Heading,
+  Box,
 } from "@chakra-ui/react";
 import { FC, useMemo, useState } from "react";
 import { FileParameter } from "src/components/FileParameter";
@@ -24,6 +26,12 @@ import { getMarkersMap, Marker, parseBed } from "src/lib/bed";
 import { useReactTable, getCoreRowModel, flexRender, getPaginationRowModel } from "@tanstack/react-table";
 import { utils as xlsxUtils, writeFile } from "xlsx";
 import { useTranslation } from "react-i18next";
+import { ParentSize } from "@visx/responsive";
+import { Group } from "@visx/group";
+import { scaleBand, scaleLinear } from "@visx/scale";
+import { AxisBottom, AxisLeft } from "@visx/axis";
+import { Bar, LinePath } from "@visx/shape";
+import { normalizeAllele } from "src/lib/allele";
 
 export const ResultsTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [vcfPath, setVcfPath] = useAtom(vcfPathAtom);
@@ -113,6 +121,7 @@ const ResultsTable: FC<{
   ]);
   const [pageIndex, setPageIndex] = useState(0);
   const [pageSize, setPageSize] = useState(10);
+  const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const { t } = useTranslation();
 
   // Rewrites specific allele fractional parts at display/export time
@@ -185,6 +194,11 @@ const ResultsTable: FC<{
       {
         header: t("sample"),
         accessorKey: "sample",
+        cell: ({ getValue }: any) => (
+          <Button variant="link" size="sm" onClick={() => setSelectedSample(getValue() as string)}>
+            {getValue() as string}
+          </Button>
+        ),
       },
     ];
 
@@ -270,6 +284,27 @@ const ResultsTable: FC<{
     xlsxUtils.book_append_sheet(workbook, worksheet, t("results"));
     writeFile(workbook, "results.xlsx");
   };
+
+  // Find the marker to use for per-sample visualizations
+  const selectedMarkerForCharts = useMemo(() => {
+    return markers[0] || null;
+  }, [markers]);
+
+  // Build data for charts when a sample is selected and a marker is available
+  const chartValues = useMemo(() => {
+    if (!selectedSample || !selectedMarkerForCharts) return null as any;
+    const values = (markerSamplesMap[selectedSample] || {})[selectedMarkerForCharts];
+    if (!values) return null as any;
+    const a1 = normalizeAllele(values.allele1 as any);
+    const a2 = normalizeAllele(values.allele2 as any);
+    if (a1 === null || a2 === null) return null as any;
+    const minVal = Math.min(a1, a2);
+    const maxVal = Math.max(a1, a2);
+    const xMin = minVal - 1;
+    const xMax = maxVal + 1;
+    const dpNum = Number(values.dp || 0);
+    return { a1, a2, xMin, xMax, dp: dpNum };
+  }, [selectedSample, selectedMarkerForCharts, markerSamplesMap]);
 
   return (
     <VStack alignSelf="stretch" spacing={4}>
@@ -378,6 +413,145 @@ const ResultsTable: FC<{
           ))}
         </Select>
       </HStack>
+
+      {selectedSample && chartValues && (
+        <VStack alignSelf="stretch" spacing={4} w="100%" maxW="95vw">
+          <Heading as="h3" size="sm">
+            {t("sampleInformation", { sample: selectedSample })}
+          </Heading>
+          <HStack alignItems="stretch" spacing={4} w="100%">
+            <ChartCard title={t("electropherogram") as string}>
+              <ParentSize>
+                {({ width, height }) => (
+                  <Electropherogram
+                    width={width}
+                    height={height}
+                    a1={chartValues.a1}
+                    a2={chartValues.a2}
+                    dp={chartValues.dp}
+                    xMin={chartValues.xMin}
+                    xMax={chartValues.xMax}
+                  />
+                )}
+              </ParentSize>
+            </ChartCard>
+            <ChartCard title={t("histogram") as string}>
+              <ParentSize>
+                {({ width, height }) => (
+                  <PerSampleHistogram
+                    width={width}
+                    height={height}
+                    a1={chartValues.a1}
+                    a2={chartValues.a2}
+                    dp={chartValues.dp}
+                    xMin={chartValues.xMin}
+                    xMax={chartValues.xMax}
+                  />
+                )}
+              </ParentSize>
+            </ChartCard>
+          </HStack>
+        </VStack>
+      )}
     </VStack>
+  );
+};
+
+const margin = { top: 10, right: 20, bottom: 30, left: 40 };
+
+const ChartCard: FC<{ title: string; children: any }> = ({ title, children }) => {
+  return (
+    <VStack alignItems="stretch" spacing={2} flexGrow={1} minH="360px">
+      <Heading as="h3" size="sm">
+        {title}
+      </Heading>
+      <Box borderWidth="1px" borderRadius="md" p={2} flexGrow={1} minH="320px">
+        {children}
+      </Box>
+    </VStack>
+  );
+};
+
+const Electropherogram: FC<{
+  width: number;
+  height: number;
+  a1: number;
+  a2: number;
+  dp: number;
+  xMin: number;
+  xMax: number;
+}> = ({ width, height, a1, a2, dp, xMin, xMax }) => {
+  const innerWidth = Math.max(0, width - margin.left - margin.right);
+  const innerHeight = Math.max(0, height - margin.top - margin.bottom);
+
+  const xScale = scaleLinear<number>({ domain: [xMin, xMax], range: [0, innerWidth] });
+  const yScale = scaleLinear<number>({ domain: [0, Math.max(1, dp) * 1.2], range: [innerHeight, 0] });
+
+  // Build a smooth curve by summing two gaussians centered at a1 and a2
+  const sigma = 0.08; // controls peak width
+  const points: { x: number; y: number }[] = [];
+  const steps = 240;
+  for (let i = 0; i <= steps; i++) {
+    const x = xMin + ((xMax - xMin) * i) / steps;
+    const y1 = dp * Math.exp(-((x - a1) * (x - a1)) / (2 * sigma * sigma));
+    const y2 = dp * Math.exp(-((x - a2) * (x - a2)) / (2 * sigma * sigma));
+    const y = Math.max(y1, y2); // show two peaks with same max height
+    points.push({ x, y });
+  }
+
+  return (
+    <svg width={width} height={height}>
+      <Group left={margin.left} top={margin.top}>
+        <AxisLeft scale={yScale} tickFormat={(v) => `${v}`} />
+        <AxisBottom top={innerHeight} scale={xScale} tickFormat={(v) => `${(v as number).toFixed(1)}`} />
+        <LinePath
+          data={points}
+          x={(d) => xScale(d.x)}
+          y={(d) => yScale(d.y)}
+          stroke="#e91e63"
+          strokeWidth={2}
+          curve={undefined}
+        />
+      </Group>
+    </svg>
+  );
+};
+
+const PerSampleHistogram: FC<{
+  width: number;
+  height: number;
+  a1: number;
+  a2: number;
+  dp: number;
+  xMin: number;
+  xMax: number;
+}> = ({ width, height, a1, a2, dp, xMin, xMax }) => {
+  const innerWidth = Math.max(0, width - margin.left - margin.right);
+  const innerHeight = Math.max(0, height - margin.top - margin.bottom);
+
+  // Build x domain with one before min and one after max
+  const domainNumbers = Array.from(new Set([xMin, a1, a2, xMax])).sort((aa, bb) => aa - bb);
+  const domain = domainNumbers.map((v) => v.toFixed(1));
+
+  const xScale = scaleBand<string>({ domain, range: [0, innerWidth], padding: 0.25 });
+  const yScale = scaleLinear<number>({ domain: [0, Math.max(1, dp) * 1.2], range: [innerHeight, 0] });
+
+  const bars = [a1, a2].map((key) => ({ key: key.toFixed(1), value: dp }));
+
+  return (
+    <svg width={width} height={height}>
+      <Group left={margin.left} top={margin.top}>
+        <AxisLeft scale={yScale} tickFormat={(v) => `${v}`} />
+        <AxisBottom top={innerHeight} scale={xScale} />
+        {bars.map((d) => {
+          const x = xScale(d.key);
+          const barWidth = xScale.bandwidth();
+          const y = yScale(d.value);
+          const barHeight = innerHeight - y;
+          if (x === undefined || Number.isNaN(y)) return null;
+          return <Bar key={d.key} x={x} y={y} width={barWidth} height={barHeight} fill="#03a9f4" />;
+        })}
+      </Group>
+    </svg>
   );
 };

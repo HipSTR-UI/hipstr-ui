@@ -60,6 +60,7 @@
   "visualize": "Visualizar",
   "electropherogram": "Eletroferograma",
   "histogram": "Histograma",
+  "sampleInformation": "Informações de {{sample}}",
   "allele": "Alelo",
   "samples": "Amostras",
   "showAlleles": "Mostrar alelos",
