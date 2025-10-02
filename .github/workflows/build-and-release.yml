@@ -63,7 +63,10 @@ jobs:
         if: matrix.os == 'macos-latest'
         shell: bash
         run: |
-          ORIG_ZIP=$(ls out/make/zip/darwin/*.zip 2>/dev/null | head -n1 || true)
+          ORIG_ZIP=$(ls out/make/zip/darwin/arm64/hipstr-ui-darwin-*.zip 2>/dev/null | head -n1 || true)
+          if [ -z "$ORIG_ZIP" ]; then
+            ORIG_ZIP=$(ls out/make/zip/darwin/hipstr-ui-darwin-*.zip 2>/dev/null | head -n1 || true)
+          fi
           echo "ORIG_ZIP=$ORIG_ZIP" >> "$GITHUB_ENV"
 
       - name: Set up macOS signing keychain
@@ -139,11 +142,19 @@ jobs:
         if: matrix.os == 'macos-latest'
         run: |
           if [ -z "$ORIG_ZIP" ] || [ ! -f "$ORIG_ZIP" ]; then
-            mkdir -p out/make/zip/darwin
-            ORIG_ZIP="out/make/zip/darwin/hipstr-ui-darwin-arm64-${{ needs.version.outputs.version }}.zip"
+            # Fallback to the Maker's architecture-specific output directory
+            mkdir -p out/make/zip/darwin/arm64
+            ORIG_ZIP="out/make/zip/darwin/arm64/hipstr-ui-darwin-arm64-${{ needs.version.outputs.version }}.zip"
           fi
           rm -f "$ORIG_ZIP"
           ditto -c -k --sequesterRsrc --keepParent out/hipstr-ui-darwin-arm64/hipstr-ui.app "$ORIG_ZIP"
+
+      - name: Remove duplicate macOS zips (keep notarized/stapled one)
+        if: matrix.os == 'macos-latest'
+        run: |
+          echo "Keeping: $ORIG_ZIP"
+          # Delete any other darwin zip with the same naming pattern
+          find out/make/zip -type f -name "hipstr-ui-darwin-*.zip" ! -path "$ORIG_ZIP" -print -delete || true
 
       - name: Cleanup temporary keychain
         if: matrix.os == 'macos-latest'
@@ -158,7 +169,7 @@ jobs:
           name: ${{ runner.os }}-artifacts
           if-no-files-found: warn
           path: |
-            out/make/**/*.zip
+            out/make/zip/darwin/arm64/*.zip
             out/make/**/*.exe
             out/make/**/*.nupkg
             out/make/**/RELEASES
@@ -178,6 +189,28 @@ jobs:
       - name: List downloaded files
         run: ls -R dist | cat
 
+      - name: De-duplicate macOS zips (prefer arm64 path)
+        shell: bash
+        run: |
+          # Remove duplicate macOS zips with the same basename, prefer keeping those in /arm64/
+          declare -A kept
+          while IFS= read -r -d '' file; do
+            base=$(basename "$file")
+            if [[ -n "${kept[$base]}" ]]; then
+              if [[ "$file" == *"/arm64/"* ]]; then
+                # Prefer arm64 path; remove previously kept
+                echo "Replacing duplicate for $base: keeping $file, deleting ${kept[$base]}"
+                rm -f "${kept[$base]}" || true
+                kept[$base]="$file"
+              else
+                echo "Deleting duplicate for $base: $file"
+                rm -f "$file" || true
+              fi
+            else
+              kept[$base]="$file"
+            fi
+          done < <(find dist -type f -name "hipstr-ui-darwin-*.zip" -print0)
+
       - name: Create Release and Upload Assets
         uses: softprops/action-gh-release@v2
         with:
@@ -186,7 +219,7 @@ jobs:
           generate_release_notes: true
           make_latest: true
           files: |
-            dist/**/*.zip
+            dist/zip/darwin/arm64/*.zip
             dist/**/*.exe
             dist/**/*.nupkg
             dist/**/*.deb
