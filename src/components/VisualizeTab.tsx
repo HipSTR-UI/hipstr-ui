@@ -38,8 +38,8 @@ export const VisualizeTab: FC<{ onFinish: () => void }> = () => {
     Object.values(markerSamplesMap || {}).forEach((sampleMarkers: { [markerId: string]: SampleValues }) => {
       const values = sampleMarkers[selectedMarker];
       if (!values) return;
-      const normalized1 = normalizeAllele(values.allele1);
-      const normalized2 = normalizeAllele(values.allele2);
+      const normalized1 = normalizeAllele(values.allele1, selectedMarker);
+      const normalized2 = normalizeAllele(values.allele2, selectedMarker);
       if (normalized1 !== null) counts.set(normalized1, (counts.get(normalized1) || 0) + 1);
       if (normalized2 !== null) counts.set(normalized2, (counts.get(normalized2) || 0) + 1);
     });

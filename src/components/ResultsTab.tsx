@@ -16,7 +16,15 @@ import {
   Text,
   Heading,
   Box,
+  Link,
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+  PopoverArrow,
+  PopoverCloseButton,
+  PopoverBody,
 } from "@chakra-ui/react";
+import { Info } from "lucide-react";
 import { FC, useMemo, useState } from "react";
 import { FileParameter } from "src/components/FileParameter";
 import { useAtom } from "jotai";
@@ -124,24 +132,6 @@ const ResultsTable: FC<{
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const { t } = useTranslation();
 
-  // Rewrites specific allele fractional parts at display/export time
-  const rewriteAlleleDecimal = (val: number | null | undefined) => {
-    if (val === null || val === undefined) return val as any;
-    const integerPart = Math.floor(val);
-    const fractionalPart = val - integerPart;
-    const approx = (a: number, b: number) => Math.abs(a - b) < 1e-6;
-
-    let newFraction = fractionalPart;
-    if (approx(fractionalPart, 0.75) || approx(fractionalPart, 0.35)) {
-      newFraction = 0.3;
-    } else if (approx(fractionalPart, 0.25) || approx(fractionalPart, 0.5)) {
-      newFraction = 0.2;
-    }
-
-    const rewritten = integerPart + newFraction;
-    return newFraction === 0.2 || newFraction === 0.3 ? parseFloat(rewritten.toFixed(1)) : rewritten;
-  };
-
   const { markers, data } = useMemo(() => {
     // Get unique markers
     const markerSet = new Set<string>();
@@ -179,8 +169,8 @@ const ResultsTable: FC<{
           const mk = Object.values(markersFromProps).find((m) => m.name === marker);
           if (selectedColumns.includes("ref")) row[`${marker}_ref`] = mk?.refAllele;
           if (selectedColumns.includes("period")) row[`${marker}_period`] = mk?.period;
-          if (selectedColumns.includes("allele1")) row[`${marker}_allele1`] = rewriteAlleleDecimal(values.allele1);
-          if (selectedColumns.includes("allele2")) row[`${marker}_allele2`] = rewriteAlleleDecimal(values.allele2);
+          if (selectedColumns.includes("allele1")) row[`${marker}_allele1`] = normalizeAllele(values.allele1, marker);
+          if (selectedColumns.includes("allele2")) row[`${marker}_allele2`] = normalizeAllele(values.allele2, marker);
           if (selectedColumns.includes("dp")) row[`${marker}_dp`] = values.dp;
         }
       });
@@ -190,6 +180,50 @@ const ResultsTable: FC<{
   }, [markerSamplesMap, markerSearchTerm, sampleSearchTerm, selectedColumns]);
 
   const columns = useMemo(() => {
+    const infoLabel = (
+      <Box>
+        <Text fontWeight={600} mb={1}>
+          ISFG nomenclature adjustments
+        </Text>
+        <Text fontSize="xs" textAlign="left" mb={1}>
+          HipSTR genotype calls are correct, but four markers require nomenclature adjustments to align with forensic
+          reporting standards.
+        </Text>
+        <Text fontSize="xs" textAlign="left" mb={1}>
+          Affected markers: D19S433, D21S11, Penta D, Penta E.
+        </Text>
+        <Link
+          href="https://doi.org/10.1016/j.fsigen.2022.102676"
+          isExternal
+          color="blue.500"
+          fontSize="xs"
+          textAlign="left"
+        >
+          📄 Read the paper
+        </Link>
+      </Box>
+    );
+
+    const alleleHeader = (label: string) => (
+      <HStack spacing={1} justifyContent="center">
+        <Text>{label}</Text>
+        <Popover placement="top" trigger="hover" openDelay={200} closeOnBlur>
+          <PopoverTrigger>
+            <span>
+              <Info size={14} color="#718096" />
+            </span>
+          </PopoverTrigger>
+          <PopoverContent maxW="sm">
+            <PopoverArrow />
+            <PopoverCloseButton />
+            <PopoverBody textTransform="none" letterSpacing="normal" fontWeight={500}>
+              {infoLabel}
+            </PopoverBody>
+          </PopoverContent>
+        </Popover>
+      </HStack>
+    );
+
     const cols: any[] = [
       {
         header: t("sample"),
@@ -212,8 +246,8 @@ const ResultsTable: FC<{
         { key: "pq", header: t("pq"), accessorKey: `${marker}_pq` },
         { key: "ref", header: t("refAllele"), accessorKey: `${marker}_ref` },
         { key: "period", header: t("period"), accessorKey: `${marker}_period` },
-        { key: "allele1", header: t("allele1"), accessorKey: `${marker}_allele1` },
-        { key: "allele2", header: t("allele2"), accessorKey: `${marker}_allele2` },
+        { key: "allele1", header: alleleHeader(t("allele1")), accessorKey: `${marker}_allele1` },
+        { key: "allele2", header: alleleHeader(t("allele2")), accessorKey: `${marker}_allele2` },
         { key: "dp", header: t("dp"), accessorKey: `${marker}_dp` },
       ].filter((col) => selectedColumns.includes(col.key));
 
@@ -273,9 +307,28 @@ const ResultsTable: FC<{
     // Replace second row with column names
     const secondRow = [t("sample")];
     markers.forEach(() => {
-      // Grab the first marker column and use the subcolumns
-      columns[1].columns.forEach((col: { header: string }) => {
-        secondRow.push(col.header);
+      selectedColumns.forEach((key) => {
+        if (key === "gt") {
+          secondRow.push(t("gt1"));
+          secondRow.push(t("gt2"));
+        } else if (key === "gb") {
+          secondRow.push(t("gb1"));
+          secondRow.push(t("gb2"));
+        } else if (key === "q") {
+          secondRow.push(t("q"));
+        } else if (key === "pq") {
+          secondRow.push(t("pq"));
+        } else if (key === "ref") {
+          secondRow.push(t("refAllele"));
+        } else if (key === "period") {
+          secondRow.push(t("period"));
+        } else if (key === "allele1") {
+          secondRow.push(t("allele1"));
+        } else if (key === "allele2") {
+          secondRow.push(t("allele2"));
+        } else if (key === "dp") {
+          secondRow.push(t("dp"));
+        }
       });
     });
     xlsxUtils.sheet_add_json(worksheet, [secondRow], { skipHeader: true, origin: "A2" });
@@ -295,8 +348,8 @@ const ResultsTable: FC<{
     if (!selectedSample || !selectedMarkerForCharts) return null as any;
     const values = (markerSamplesMap[selectedSample] || {})[selectedMarkerForCharts];
     if (!values) return null as any;
-    const a1 = normalizeAllele(values.allele1 as any);
-    const a2 = normalizeAllele(values.allele2 as any);
+    const a1 = normalizeAllele(values.allele1 as any, selectedMarkerForCharts as any);
+    const a2 = normalizeAllele(values.allele2 as any, selectedMarkerForCharts as any);
     if (a1 === null || a2 === null) return null as any;
     const minVal = Math.min(a1, a2);
     const maxVal = Math.max(a1, a2);
