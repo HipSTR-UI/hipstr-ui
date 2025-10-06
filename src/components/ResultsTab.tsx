@@ -132,6 +132,37 @@ const ResultsTable: FC<{
   const [selectedSample, setSelectedSample] = useState<string | null>(null);
   const { t } = useTranslation();
 
+  const columnDescriptions: { [key: string]: { title: string; desc: string } } = {
+    gt: {
+      title: "GT",
+      desc: "Encodes the genotype as allele indices referring to the REF and ALT fields of the VCF. It does not represent the final allele call (e.g., repeat number).",
+    },
+    gb: {
+      title: "GB",
+      desc: "Indicates the difference in base pairs between each allele and the reference sequence (REF). It allows estimation of allele size variation relative to the reference and is used by HipSTR-UI to calculate the final allele calls in base pairs.",
+    },
+    q: {
+      title: "Q",
+      desc: "Posterior probability of the unphased genotype, reflecting the confidence of the genotype assignment without phase information.",
+    },
+    pq: {
+      title: "PQ",
+      desc: "Posterior probability of the phased genotype, incorporating haplotype phase information into the confidence estimate.",
+    },
+    dp: {
+      title: "DP",
+      desc: "Number of valid reads supporting the genotype call at the locus. Serves as a direct measure of coverage depth for that marker.",
+    },
+    period: {
+      title: "PERIOD",
+      desc: "Length (in base pairs) of the STR repeat motif (e.g., 4 for tetranucleotides).",
+    },
+    ref: {
+      title: "Ref allele",
+      desc: "Reference allele sequence defined in the FASTA genome used for alignment (e.g., GRCh38). Used as baseline for computing relative allele differences.",
+    },
+  };
+
   const { markers, data } = useMemo(() => {
     // Get unique markers
     const markerSet = new Set<string>();
@@ -390,21 +421,48 @@ const ResultsTable: FC<{
             { key: "allele1", label: t("allele1") },
             { key: "allele2", label: t("allele2") },
             { key: "dp", label: t("dp") },
-          ].map(({ key, label }) => (
-            <Checkbox
-              key={key}
-              isChecked={selectedColumns.includes(key)}
-              onChange={(e) => {
-                if (e.target.checked) {
-                  setSelectedColumns([...selectedColumns, key]);
-                } else {
-                  setSelectedColumns(selectedColumns.filter((col) => col !== key));
-                }
-              }}
-            >
-              {label}
-            </Checkbox>
-          ))}
+          ].map(({ key, label }) => {
+            const info = columnDescriptions[key];
+            return (
+              <HStack key={key} spacing={1}>
+                <Checkbox
+                  isChecked={selectedColumns.includes(key)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedColumns([...selectedColumns, key]);
+                    } else {
+                      setSelectedColumns(selectedColumns.filter((col) => col !== key));
+                    }
+                  }}
+                >
+                  {label}
+                </Checkbox>
+                {info && (
+                  <Popover placement="top" trigger="hover" openDelay={200} closeOnBlur>
+                    <PopoverTrigger>
+                      <span>
+                        <Info size={14} color="#718096" />
+                      </span>
+                    </PopoverTrigger>
+                    <PopoverContent maxW="sm">
+                      <PopoverArrow />
+                      <PopoverCloseButton />
+                      <PopoverBody textTransform="none" letterSpacing="normal" fontWeight={500}>
+                        <Box>
+                          <Text fontWeight={600} mb={1}>
+                            {info.title}
+                          </Text>
+                          <Text fontSize="xs" textAlign="left">
+                            {info.desc}
+                          </Text>
+                        </Box>
+                      </PopoverBody>
+                    </PopoverContent>
+                  </Popover>
+                )}
+              </HStack>
+            );
+          })}
         </HStack>
       </VStack>
       <Table variant="simple" size="sm">
