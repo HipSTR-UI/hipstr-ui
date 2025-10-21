@@ -8,12 +8,26 @@ This folder includes three example samples from the 1000 Genomes Project (public
 Each sample is provided in CRAM format, along with its corresponding CRAI index
 
 samples/
-├── HG00100.cram
-├── HG00100.crai
-├── HG00101.cram
-├── HG00101.crai
-├── HG00102.cram
-├── HG00102.crai
+├── HG03304.final.cram
+├── HG03304.final.cram.crai
+├── HG03309.final.cram
+├── HG03309.final.cram.crai
+├── HG03311.final.cram
+├── HG03311.final.cram.crai
+├── HG03342.final.cram
+├── HG03342.final.cram.crai
+├── HG03354.final.cram
+├── HG03354.final.cram.crai
+├── HG03366.final.cram
+├── HG03366.final.cram.crai
+├── HG03436.final.cram
+├── HG03436.final.cram.crai
+├── HG03455.final.cram
+├── HG03455.final.cram.crai
+├── HG03479.final.cram
+├── HG03479.final.cram.crai
+├── HG03917.final.cram
+└── HG03917.final.cram.crai
 
 These are freely available reference samples used for testing and demonstration purposes only
 
@@ -44,9 +58,9 @@ This folder will contain the output files generated after running HipSTR on the 
 They serve as reference examples for validating your own run
 
 results/
-├── hipstr_output.vcf
-├── hipstr_summary.txt
-└── ...
+├── hipstr_output_demo.vcf
+├── hipstr_summary_demo.txt
+└── hipstr_log_demo.txt
 
 IMPORTANT
 
