@@ -28,17 +28,32 @@ HipSTR-UI operates in **two complementary modes**:
     - HipSTR-UI runs HipSTR locally, producing:
         - a **VCF file** with genotyping results
         - a **log file** with detailed execution steps
-    - Final genotypes and coverage are shown directly in the interface no manual calculations needed
+    - HipSTR-generated genotype calls and locus-level coverage are shown directly in the interface, eliminating the need for manual parsing of VCF files
 2. **VCF interpretation & visualization**
     - Load an existing HipSTR VCF
     - HipSTR-UI parses the file and provides **interactive tables, allele plots, and exports**
+
+### Exported Results (CSV / Excel)
+
+HipSTR-UI allows users to export all displayed results as CSV or Excel files for downstream inspection, reporting, or archiving.
+
+Exported tables include:
+- Sample and locus identifiers
+- Genotype calls as reported by HipSTR
+- Base-pair differences relative to the reference allele
+- Repeat period and reference allele information
+- Locus-level sequencing depth (DP)
+- Quality metrics and posterior probabilities (Q, PQ)
+- Flags and annotations relevant for quality control
+
+All exported values are directly extracted from the HipSTR VCF output and are provided for transparency and reproducibility. No additional filtering, normalization, or reinterpretation is applied during export.
 
 # Features
 
 - Runs **fully offline** all data stays on your computer
 - Two modes: **Run HipSTR pipeline** or **Visualize existing VCFs**
 - Interactive results table with filtering and export (CSV/Excel)
-- Allele coverage plots and quality metrics
+- Qualitative allele distribution plots and quality metrics derived from HipSTR output
 - Optional **ISFG nomenclature adjustments** for D19S433, D21S11, Penta D, and Penta E
 - Log files to track execution and identify issues (e.g., ungenotyped loci)
 
