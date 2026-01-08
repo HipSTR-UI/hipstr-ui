@@ -79,5 +79,13 @@
   "bamSampsDescription": "Lista separada por comas de muestras en el mismo orden que los archivos BAM. Asigna cada lectura la muestra correspondiente al archivo. Por defecto, cada lectura debe tener una etiqueta RG y la muestra se determina a partir del campo SM. ¿Por qué? Tus archivos BAM RG no tienen un campo SM",
   "bamLibsDescription": "Lista separada por comas de bibliotecas en el mismo orden que los archivos BAM. Asigna cada lectura la biblioteca correspondiente al archivo. Por defecto, cada lectura debe tener una etiqueta RG y la biblioteca se determina a partir del campo LB. NOTA: Esta opción es requerida cuando se ha especificado --bam-samps. ¿Por qué? Tus archivos BAM RG no tienen un campo LB y quieres usar una etiqueta diferente (e.g. SM)",
   "libFieldDescription": "Campo de grupo de lectura usado para asignar cada lectura una biblioteca. Por defecto, la biblioteca se determina a partir del campo LB asociado con RG. ¿Por qué? Tus archivos BAM RG no tienen un campo LB y quieres usar una etiqueta diferente (e.g. SM)",
-  "snpVcfDescription": "Archivo VCF comprimido en bgzip conteniendo genotipos de SNPs acoplados para las muestras a genotipar. Estos SNPs se usarán para acoplar físicamente los STRs. ¿Por qué? Tienes disponibles genotipos de SNPs acoplados"
+  "snpVcfDescription": "Archivo VCF comprimido en bgzip conteniendo genotipos de SNPs acoplados para las muestras a genotipar. Estos SNPs se usarán para acoplar físicamente los STRs. ¿Por qué? Tienes disponibles genotipos de SNPs acoplados",
+  "schematicVisualizationDisclaimer": "Visualización esquemática solo para inspección cualitativa. No representa escaneos de electroforesis capilar ni profundidad de lectura específica de alelo.",
+  "gtDesc": "Identificador de genotipo de HipSTR; útil para identificar isoalelos basados en secuencia cuando se combina con GB.",
+  "gbDesc": "Diferencia en pares de bases relativa al alelo de referencia (hg38).",
+  "qDesc": "Probabilidad posterior del genotipo no acoplado reportado por HipSTR.",
+  "pqDesc": "Probabilidad posterior del genotipo acoplado reportado por HipSTR.",
+  "dpDesc": "Profundidad total de secuenciación a nivel de locus reportada por HipSTR.",
+  "periodDesc": "Longitud (en pares de bases) del motivo de repetición STR (p. ej., 4 para tetranucleótidos).",
+  "refDesc": "Secuencia del alelo de referencia definida en el genoma FASTA usado para alineación (p. ej., GRCh38). Usado como línea base para calcular diferencias relativas de alelos."
 }

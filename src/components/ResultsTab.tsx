@@ -135,31 +135,31 @@ const ResultsTable: FC<{
   const columnDescriptions: { [key: string]: { title: string; desc: string } } = {
     gt: {
       title: "GT",
-      desc: "Encodes the genotype as allele indices referring to the REF and ALT fields of the VCF. It does not represent the final allele call (e.g., repeat number).",
+      desc: t("gtDesc"),
     },
     gb: {
       title: "GB",
-      desc: "Indicates the difference in base pairs between each allele and the reference sequence (REF). It allows estimation of allele size variation relative to the reference and is used by HipSTR-UI to calculate the final allele calls in base pairs.",
+      desc: t("gbDesc"),
     },
     q: {
       title: "Q",
-      desc: "Posterior probability of the unphased genotype, reflecting the confidence of the genotype assignment without phase information.",
+      desc: t("qDesc"),
     },
     pq: {
       title: "PQ",
-      desc: "Posterior probability of the phased genotype, incorporating haplotype phase information into the confidence estimate.",
+      desc: t("pqDesc"),
     },
     dp: {
       title: "DP",
-      desc: "Number of valid reads supporting the genotype call at the locus. Serves as a direct measure of coverage depth for that marker.",
+      desc: t("dpDesc"),
     },
     period: {
       title: "PERIOD",
-      desc: "Length (in base pairs) of the STR repeat motif (e.g., 4 for tetranucleotides).",
+      desc: t("periodDesc"),
     },
     ref: {
       title: "Ref allele",
-      desc: "Reference allele sequence defined in the FASTA genome used for alignment (e.g., GRCh38). Used as baseline for computing relative allele differences.",
+      desc: t("refDesc"),
     },
   };
 
@@ -562,6 +562,7 @@ const ResultsTable: FC<{
               </ParentSize>
             </ChartCard>
           </HStack>
+          <Text fontSize="sm">{t("schematicVisualizationDisclaimer")}</Text>
         </VStack>
       )}
     </VStack>
@@ -672,7 +673,13 @@ const PerSampleHistogram: FC<{
   const xScale = scaleBand<string>({ domain, range: [0, innerWidth], padding: 0.25 });
   const yScale = scaleLinear<number>({ domain: [0, Math.max(1, dp) * 1.2], range: [innerHeight, 0] });
 
-  const bars = [a1, a2].map((key) => ({ key: key.toFixed(1), value: dp }));
+  // Create bars only for unique allele values
+  const uniqueAlleles = a1 === a2 ? [a1] : [a1, a2];
+  const bars = uniqueAlleles.map((allele, index) => ({
+    key: `${allele.toFixed(1)}-${index}`,
+    label: allele.toFixed(1),
+    value: a1 !== a2 ? dp / 2 : dp,
+  }));
 
   return (
     <svg width={width} height={height}>
@@ -680,7 +687,7 @@ const PerSampleHistogram: FC<{
         <AxisLeft scale={yScale} tickFormat={(v) => `${v}`} />
         <AxisBottom top={innerHeight} scale={xScale} />
         {bars.map((d) => {
-          const x = xScale(d.key);
+          const x = xScale(d.label);
           const barWidth = xScale.bandwidth();
           const y = yScale(d.value);
           const barHeight = innerHeight - y;

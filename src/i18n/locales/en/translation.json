@@ -79,5 +79,13 @@
   "bamSampsDescription": "Comma separated list of samples in same order as BAM files. Assign each read the sample corresponding to its file. By default, each read must have an RG tag and and the sample is determined from the SM field. Why? Your BAM file RG tags don't have an SM field",
   "bamLibsDescription": "Comma separated list of libraries in same order as BAM files. Assign each read the library corresponding to its file. By default, each read must have an RG tag and and the library is determined from the LB field. NOTE: This option is required when --bam-samps has been specified. Why? Your BAM file RG tags don't have an LB tag and you want to use a different tag instead (e.g. SM)",
   "libFieldDescription": "Read group field used to assign each read a library. By default, the library is determined from the LB field associated with RG. Why? Your BAM file RG tags don't have an LB tag and you want to use a different tag instead (e.g. SM)",
-  "snpVcfDescription": "Bgzipped input VCF file containing phased SNP genotypes for the samples to be genotyped. These SNPs will be used to physically phase STRs. Why? You have available phased SNP genotypes"
+  "snpVcfDescription": "Bgzipped input VCF file containing phased SNP genotypes for the samples to be genotyped. These SNPs will be used to physically phase STRs. Why? You have available phased SNP genotypes",
+  "schematicVisualizationDisclaimer": "Schematic visualization for qualitative inspection only. Does not represent capillary electrophoresis scans or allele-specific read depth.",
+  "gtDesc": "HipSTR genotype identifier; useful for identifying sequence-based isoalleles when combined with GB.",
+  "gbDesc": "Base-pair difference relative to the reference allele (hg38).",
+  "qDesc": "Posterior probability of the unphased genotype reported by HipSTR.",
+  "pqDesc": "Posterior probability of the phased genotype reported by HipSTR.",
+  "dpDesc": "Total locus-level sequencing depth reported by HipSTR.",
+  "periodDesc": "Length (in base pairs) of the STR repeat motif (e.g., 4 for tetranucleotides).",
+  "refDesc": "Reference allele sequence defined in the FASTA genome used for alignment (e.g., GRCh38). Used as baseline for computing relative allele differences."
 }
