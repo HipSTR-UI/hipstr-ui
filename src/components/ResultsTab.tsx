@@ -598,6 +598,23 @@ const Electropherogram: FC<{
   const xScale = scaleLinear<number>({ domain: [xMin, xMax], range: [0, innerWidth] });
   const yScale = scaleLinear<number>({ domain: [0, Math.max(1, dp) * 1.2], range: [innerHeight, 0] });
 
+  // Generate integer tick values for the x-axis
+  const minTick = Math.ceil(xMin);
+  const maxTick = Math.floor(xMax);
+  const integerTicks = Array.from({ length: maxTick - minTick + 1 }, (_, i) => minTick + i);
+
+  // Add a1 and a2 if they are not integers
+  const tickValues = [...integerTicks];
+  if (!Number.isInteger(a1)) {
+    tickValues.push(a1);
+  }
+  if (!Number.isInteger(a2)) {
+    tickValues.push(a2);
+  }
+
+  // Sort and remove duplicates
+  const sortedTickValues = Array.from(new Set(tickValues)).sort((a, b) => a - b);
+
   // Build a smooth curve by summing two gaussians centered at a1 and a2
   const sigma = 0.08; // controls peak width
   const points: { x: number; y: number }[] = [];
@@ -614,7 +631,15 @@ const Electropherogram: FC<{
     <svg width={width} height={height}>
       <Group left={margin.left} top={margin.top}>
         <AxisLeft scale={yScale} tickFormat={(v) => `${v}`} />
-        <AxisBottom top={innerHeight} scale={xScale} tickFormat={(v) => `${(v as number).toFixed(1)}`} />
+        <AxisBottom
+          top={innerHeight}
+          scale={xScale}
+          tickValues={sortedTickValues}
+          tickFormat={(v) => {
+            const num = v as number;
+            return Number.isInteger(num) ? `${num}` : `${num.toFixed(1)}`;
+          }}
+        />
         <LinePath
           data={points}
           x={(d) => xScale(d.x)}
