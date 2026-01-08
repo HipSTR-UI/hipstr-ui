@@ -620,10 +620,11 @@ const Electropherogram: FC<{
   const sigma = 0.08; // controls peak width
   const points: { x: number; y: number }[] = [];
   const steps = 240;
+  const effectiveDp = a1 !== a2 ? dp / 2 : dp;
   for (let i = 0; i <= steps; i++) {
     const x = xMin + ((xMax - xMin) * i) / steps;
-    const y1 = dp * Math.exp(-((x - a1) * (x - a1)) / (2 * sigma * sigma));
-    const y2 = dp * Math.exp(-((x - a2) * (x - a2)) / (2 * sigma * sigma));
+    const y1 = effectiveDp * Math.exp(-((x - a1) * (x - a1)) / (2 * sigma * sigma));
+    const y2 = effectiveDp * Math.exp(-((x - a2) * (x - a2)) / (2 * sigma * sigma));
     const y = Math.max(y1, y2); // show two peaks with same max height
     points.push({ x, y });
   }
