@@ -10,9 +10,19 @@ Comes with a pre-built HipSTR binary for Windows, macOS, and Linux. It was desig
 
 Built with Electron and Chakra UI.
 
+### ▶ Prefer not to install anything? Try **<https://hipstr.pages.dev>**
+
+[HipSTR-Web](https://github.com/HipSTR-UI/hipstr-ui-web) is the same workflow in
+a browser tab, with HipSTR compiled to WebAssembly. Your files never leave your
+machine there either — they are read locally, not uploaded — so it is a quick
+way to try HipSTR, or to read an existing VCF, without downloading an installer.
+
+The desktop app remains the better fit for large or repeated runs: it uses the
+native binary and has no browser memory ceiling.
+
 # Quick Start
 
-1. **Download** the installer for your system from the latest release for your operating system from the [Releases](https://github.com/jayala/hipstr-ui/releases) page
+1. **Download** the installer for your system from the latest release for your operating system from the [Releases](https://github.com/HipSTR-UI/hipstr-ui/releases) page
 - **Windows:** hipstr-ui.Setup.exe
 - **macOS Apple Silicon (M1/M2/M3):** hipstr-ui-darwin-arm64.zip
 - **Ubuntu/Debian:** hipstr-ui_amd64.deb
