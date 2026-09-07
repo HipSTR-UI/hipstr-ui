@@ -20,7 +20,7 @@ import { useGetPath } from "src/hooks/useGetPath";
 import { usePathSeparator } from "src/hooks/usePathSeparator";
 import { bedAtom, fastaAtom, filesAtom, paramsAtom, vcfPathAtom } from "src/jotai/execute";
 import { osAtom } from "src/jotai/os";
-import { joinPath } from "src/lib/path";
+import { joinPath, quoteArg } from "src/lib/path";
 
 const spaces = "  ";
 
@@ -64,7 +64,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
     });
   }, [strVcfPath]);
 
-  const allParams: Record<string, string | boolean> = {
+  const allParams: Record<string, string | boolean | string[]> = {
     fasta,
     regions: bed,
     "str-vcf": strVcfPath,
@@ -76,21 +76,23 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
     .map(([name, value]) => {
       let valueStr = "";
       if (value && value !== true) {
-        valueStr = Array.isArray(value) ? ` ${value.join(`,`)}` : ` ${value}`;
+        // The bam list is a single comma-separated argument, so it is quoted as a whole.
+        valueStr = ` ${quoteArg(Array.isArray(value) ? value.join(`,`) : `${value}`, os.platform)}`;
       }
       const separator = os.platform === "win32" ? " " : ` \\\n${spaces}`;
       return `${separator}--${name}${valueStr}`;
     })
     .join("");
 
-  const cmdStr = joinPath(
+  const hipstrPath = joinPath(
     pathSep,
     os.resourcesPath,
     "binaries",
     "hipstr",
     `${os.platform}-${os.arch}`,
-    `HipSTR${formattedParams}`
+    "HipSTR"
   );
+  const cmdStr = `${quoteArg(hipstrPath, os.platform)}${formattedParams}`;
   const samtoolsPath = joinPath(
     pathSep,
     os.resourcesPath,
@@ -147,7 +149,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             // Check fasta index
             if (!(await hasIndexFile(fasta))) {
               setIndexesOut((prev) => `${prev}\n${t("fastaIndexNotFoundCreating")}`);
-              if (!(await createIndexFile(samtoolsPath, fasta))) {
+              if (!(await createIndexFile(samtoolsPath, fasta, os.platform))) {
                 setIndexesOut((prev) => `${prev}\n${t("couldNotCreateIndexFileSkipping")}`);
               }
             }
@@ -155,7 +157,7 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
             for (const file of files as { path: string }[]) {
               if (!(await hasIndexFile(file.path))) {
                 setIndexesOut((prev) => `${prev}\n${file.path} ${t("indexNotFoundCreating")}`);
-                if (!(await createIndexFile(samtoolsPath, file.path))) {
+                if (!(await createIndexFile(samtoolsPath, file.path, os.platform))) {
                   setIndexesOut((prev) => `${prev}\n${t("couldNotCreateIndexFileSkipping")}`);
                 }
               }
@@ -223,9 +225,9 @@ export const ExecutionTab: FC<{ onFinish: () => void }> = ({ onFinish }) => {
   );
 };
 
-async function createIndexFile(samtoolsPath: string, path: string) {
+async function createIndexFile(samtoolsPath: string, path: string, platform: string) {
   try {
-    await electron.execSync(`${samtoolsPath} index ${path}`);
+    await electron.execSync(`${quoteArg(samtoolsPath, platform)} index ${quoteArg(path, platform)}`);
     return true;
   } catch (ex) {
     alert(`${ex}`);

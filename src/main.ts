@@ -5,7 +5,7 @@ import process from "process";
 import child_process from "child_process";
 import fs from "node:fs";
 import { GetPathName } from "src/types/getPath";
-import { joinPath } from "./lib/path";
+import { joinPath, quoteArg } from "./lib/path";
 import { initSentryMain, captureErrorMain, flushSentryMain } from "./lib/sentry-main";
 import { setupMainProcessErrorHandlers } from "./lib/globalErrorHandler";
 
@@ -204,7 +204,7 @@ ipcMain.handle("extractGz", async (event: IpcMainInvokeEvent, filePath: string) 
         stream.on("error", reject);
       });
     } else {
-      await child_process.execSync(`gunzip -fdk ${filePath}`).toString();
+      await child_process.execSync(`gunzip -fdk ${quoteArg(filePath, process.platform)}`).toString();
     }
     return true;
   } catch (error) {
